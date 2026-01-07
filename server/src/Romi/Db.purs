@@ -26,7 +26,7 @@ import Prelude
 
 import Control.Monad.Reader (ask)
 import Control.Promise (Promise, toAffE)
-import Data.Array (filter, find, snoc)
+import Data.Array (filter, find, length, snoc)
 import Data.Maybe (Maybe(..))
 import Effect (Effect)
 import Effect.Aff (Aff)
@@ -150,6 +150,7 @@ type ListModel a b =
   , insert :: b -> Romi a Unit
   , insertMany :: Array b -> Romi a Unit
   , delete :: (b -> Boolean) -> Romi a Unit
+  , count :: Romi a Int
   }
 
 type ListModelApi a b =
@@ -190,4 +191,9 @@ createModel { key, decode, encode } =
       dbmOf.put key $ encode case datas of
             Just datas'' -> filter (not <<< cond) $ decode datas''
             Nothing -> []
+    , count: do
+      datas <- dbmOf.get key
+      pure $ case datas of
+        Just datas' -> length $ decode datas'
+        Nothing -> 0
   }

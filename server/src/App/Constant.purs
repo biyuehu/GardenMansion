@@ -13,8 +13,8 @@ defaultModelUsers = [
   { userId: 1
   , userName: "admin"
   , userPassword: "123456"
-  , userEmail: "admin@gmail.com"
-  , userTime: 0
+  -- , userEmail: "admin@gmail.com"
+  , userTime: 0.0
   , userAlive: true
   , userAdmin: true
   }
@@ -26,7 +26,7 @@ defaultModelMeta =
   , webName: "Garden Mansion"
   , webTitle: "Garden Mansion"
   , webNotice: "Here's a notice for the Garden Mansion"
-  , webStartTime: 1
+  , webStartTime: 1.0
   }
 
 dbDirectory :: String

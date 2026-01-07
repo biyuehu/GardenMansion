@@ -7,7 +7,7 @@ import Prelude
 
 import App.Components (logger)
 import App.Constant (dbDirectory, dbPrefix, defaultModelMeta, defaultModelUsers, defaultServerPort)
-import App.Handler (createMessage, fetchAllExpenses, fetchAllMessages, fetchAllUsers, fetchMeta)
+import App.Handler (createExpense, createMessage, createUser, fetchAllExpenses, fetchAllMessages, fetchAllUsers, fetchMeta)
 import App.Models (DBKey(..), dbm)
 import App.Schema (parseModelExpenses, parseModelMessages, parseModelMeta, parseModelUsers)
 import App.Types (State(..))
@@ -40,7 +40,9 @@ components =
   , Route GET "/api/messages" fetchAllMessages
   , Route POST "/api/messages" createMessage
   , Route GET "/api/expenses" fetchAllExpenses
+  , Route POST "/api/expenses" createExpense
   , Route GET "/api/users" fetchAllUsers
+  , Route POST "/api/users" createUser
   , Route GET "/api/meta" fetchMeta
   ]
 
