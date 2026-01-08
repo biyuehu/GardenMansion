@@ -1,4 +1,7 @@
-module App.Components where
+module App.Components
+  ( logger
+  )
+  where
 
 import Prelude
 

@@ -1,6 +1,6 @@
 module App.Schema where
 
-import Models (ReqMessageApi, ModelMessages, ReqExpenseApi, ModelExpenses, ReqInfoRenameApi, ReqInfoPasswordApi, ReqMetaApi, ModelMeta, ReqUserApi, ReqUserDeleteApi, ReqMessageDeleteApi, ReqExpenseDeleteApi, ModelUsers)
+import Models (ModelExpenses, ModelMessages, ModelMeta, ModelUsers, ReqExpenseApi, ReqExpenseDeleteApi, ReqInfoPasswordApi, ReqInfoRenameApi, ReqMessageApi, ReqMessageDeleteApi, ReqMetaApi, ReqUserApi, ReqUserDeleteApi, ReqLoginApi)
 import Utils (Schema, validate)
 
 parseReqMessageApi :: Schema ReqMessageApi
@@ -41,3 +41,6 @@ parseReqExpenseDeleteApi = validate
 
 parseModelUsers :: Schema ModelUsers
 parseModelUsers = validate
+
+parseLoginInApi :: Schema ReqLoginApi
+parseLoginInApi = validate

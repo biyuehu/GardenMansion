@@ -1,6 +1,19 @@
 @URL = http://localhost:8080/api
-@USERNAME = test
-@PASSWORD = 233
+@USERNAME = admin
+@PASSWORD = 123456
+
+
+###
+
+POST {{URL}}/login HTTP/1.1
+Body:
+
+{
+  "loginUsername": "{{USERNAME}}",
+  "loginPassword": "{{PASSWORD}}"
+}
+
+###
 
 GET {{URL}}/messages HTTP/1.1
 
