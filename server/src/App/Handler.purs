@@ -13,11 +13,12 @@ import Data.Maybe (Maybe(..), maybe)
 import Effect.Class (liftEffect)
 import Romi.Components (guarded)
 import Romi.Response (Response(..), Status(..))
+import Utils (encodeJson)
 
 fetchAllMessages :: HandlerState
 fetchAllMessages _ = do
   messagesList <- messages.selectAll
-  pure $ JsonRes $ show messagesList
+  pure $ JsonRes $ encodeJson messagesList
 
 createMessage :: HandlerState
 createMessage = guarded (authFactory checkCreatingMessage) $ \_ { user, dat: { messageText, messageReplyId } } -> do
@@ -35,7 +36,7 @@ createMessage = guarded (authFactory checkCreatingMessage) $ \_ { user, dat: { m
 fetchAllExpenses :: HandlerState
 fetchAllExpenses _ = do
   expensesList <- expenses.selectAll
-  pure $ JsonRes $ show expensesList
+  pure $ JsonRes $ encodeJson expensesList
 
 createExpense :: HandlerState
 createExpense = guarded (authFactory checkCreatingExpense) $ \_ { user, dat: { expenseAmount, expenseComment  } } -> do
@@ -53,7 +54,7 @@ createExpense = guarded (authFactory checkCreatingExpense) $ \_ { user, dat: { e
 fetchAllUsers :: HandlerState
 fetchAllUsers _ = do
   usersList <- users.selectAll
-  pure $ JsonRes $ show usersList
+  pure $ JsonRes $ encodeJson usersList
 
 createUser :: HandlerState
 createUser = guarded (authAdminFactory checkCreatingUser) $ \_ { dat: { userName, userPassword, userAlive } } -> do
@@ -76,13 +77,13 @@ fetchMeta _ = do
 
 updateMeta :: HandlerState
 updateMeta = guarded (authAdminFactory checkUpdatingMeta) $ \_ { dat } -> do
-  dbm.put Meta $ show dat
+  dbm.put Meta dat
   pure $ StatusRes NoContent
 
 renameInfo :: HandlerState
 renameInfo = guarded (authFactory checkRenaming) $ \_ { user, dat: { infoUsername  } } -> do
   usersList <- users.selectAll
-  dbm.put Users $ show $ map (\u -> if u.userId == user.userId then user { userName = infoUsername } else u) usersList
+  dbm.put Users $ map (\u -> if u.userId == user.userId then user { userName = infoUsername } else u) usersList
   pure $ StatusRes OK
 
 changePasswordInfo:: HandlerState
@@ -91,7 +92,7 @@ changePasswordInfo = guarded (authFactory checkChangeingPassword) $ \_ { user, d
     usersList <- users.selectAll
     case find (\u -> u.userId == user.userId && u.userPassword == infoPasswordOld) usersList of
       Just _ -> do
-        dbm.put Users $ show $ map (\u -> if u.userId == user.userId then user { userPassword = infoPasswordNew } else u) usersList
+        dbm.put Users $ map (\u -> if u.userId == user.userId then user { userPassword = infoPasswordNew } else u) usersList
         pure $ StatusRes OK
       Nothing -> pure $ StatusRes Forbidden
 
@@ -101,5 +102,5 @@ loginIn = guarded checkLogginIn $ \req { loginPassword , loginUsername  } -> do
   if isRight user then pure $ StatusRes NoContent else do
     usersList <- users.selectAll
     case find (\u -> u.userName == loginUsername && u.userPassword == loginPassword) usersList of
-      Just _ -> pure $ JsonRes $ show { "token": generateToken { name: loginUsername, password: loginPassword } }
+      Just _ -> pure $ JsonRes $ encodeJson { "token": generateToken { name: loginUsername, password: loginPassword } }
       Nothing -> pure $ StatusRes Unauthorized

@@ -11,8 +11,7 @@ import App.Route (routers)
 import App.Schema (parseModelExpenses, parseModelMessages, parseModelMeta, parseModelUsers)
 import App.Types (State(..))
 import Control.Monad.Reader (runReaderT)
-import Data.Array (length)
-import Data.Either (Either(..), isLeft)
+import Data.Either (isLeft)
 import Data.Maybe (Maybe(..))
 import Effect.Aff (Aff)
 import Effect.Class (liftEffect)
@@ -25,11 +24,11 @@ dbInit :: Aff DB
 dbInit = do
   db <- dbCreate dbDirectory dbPrefix
   runReaderT (do
-    dbm.putOrIf Users (show defaultModelUsers) $ \dat -> isLeft $ parseModelUsers dat >>= \users -> if length users == 0 then Left "" else Right ""
-    dbm.put Users (show defaultModelUsers)
+    dbm.putOrIf Users defaultModelUsers $ isLeft <<< parseModelUsers
+    dbm.put Users defaultModelUsers
     dbm.putOrIf Messages "[]" $ isLeft <<< parseModelMessages
     dbm.putOrIf Expenses "[]" $ isLeft <<< parseModelExpenses
-    dbm.putOrIf Meta (show defaultModelMeta) $ isLeft <<< parseModelMeta
+    dbm.putOrIf Meta defaultModelMeta $ isLeft <<< parseModelMeta
   ) db
   pure db
 

@@ -1,6 +1,9 @@
 module Utils
   ( Schema
   , currentDir
+  , decodeBase64
+  , encodeBase64
+  , encodeJson
   , endsWith
   , filterMap
   , log'
@@ -53,3 +56,9 @@ foreign import pathJoin :: String -> String -> String
 
 log' ∷ ∀ (t24 ∷ Type -> Type). MonadEffect t24 ⇒ String → t24 Unit
 log' = liftEffect <<< log
+
+foreign import encodeJson :: forall a. a -> String
+
+foreign import encodeBase64 :: String -> String
+
+foreign import decodeBase64 :: String -> String

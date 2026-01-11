@@ -11,7 +11,6 @@ import Prelude
 
 import App.Schema (parseModelExpenses, parseModelMessages, parseModelUsers)
 import App.Types (State)
-import Data.Either (Either(..))
 import Models (ModelUserSingle, ResMessageSingle, ResExpenseSingle)
 import Romi.Db (DBM, ListModel, createModel, dbmOf)
 
@@ -28,27 +27,20 @@ dbm = dbmOf
 
 type ListModel' a = ListModel State a
 
-abandon :: forall a b. Either a (Array b) -> Array b
-abandon (Left _) = []
-abandon (Right xs) = xs
-
 users :: ListModel' ModelUserSingle
 users = createModel
   { key: Users
-  , decode: parseModelUsers >>> abandon
-  , encode: show
+  , parse: parseModelUsers
   }
 
 messages :: ListModel' ResMessageSingle
 messages = createModel
   { key: Messages
-  , decode: parseModelMessages >>> abandon
-  , encode: show
+  , parse: parseModelMessages
   }
 
 expenses :: ListModel' ResExpenseSingle
 expenses = createModel
   { key: Expenses
-  , decode: parseModelExpenses >>> abandon
-  , encode: show
+  , parse: parseModelExpenses
   }

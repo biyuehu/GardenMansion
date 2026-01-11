@@ -16,27 +16,24 @@ import Data.String (Pattern(..), split)
 import Models (ModelUserSingle)
 import Romi.Common (Romi)
 import Romi.Request (Request, select)
+import Utils (decodeBase64, encodeBase64)
 
-
-foreign import decodeStr :: String -> String
-
-foreign import encodeStr :: String -> String
 
 type Token = { name :: String, password :: String }
 
 parseToken :: String -> Maybe Token
 parseToken s = case split (Pattern ":|:") s of
-  [name, password] -> Just { name: decodeStr name, password: decodeStr password }
+  [name, password] -> Just { name: decodeBase64 name, password: decodeBase64 password }
   _ -> Nothing
 
 generateToken :: Token -> String
-generateToken { name, password } = encodeStr (name) <> ":|:" <> encodeStr (password)
+generateToken { name, password } = encodeBase64 (name) <> ":|:" <> encodeBase64 (password)
 
 selectAuthUser :: Request -> Romi State (Either String ModelUserSingle)
-selectAuthUser req = case select req.headers "Authorization" >>= parseToken of
-  Just { name, password } -> do
-    user <- users.select (\{userName, userPassword, userAlive} -> userName == name && userPassword == password && userAlive)
-    case user of
-      Just user' -> pure $ Right user'
-      Nothing -> pure $ Left "Invalid credentials"
-  Nothing -> pure $ Left "Authorization header not found"
+selectAuthUser req = case select req.headers "authorization" >>= parseToken of
+    Just { name, password } -> do
+      user <- users.select (\{userName, userPassword, userAlive} -> userName == name && userPassword == password && userAlive)
+      case user of
+        Just user' -> pure $ Right user'
+        Nothing -> pure $ Left "Invalid credentials"
+    Nothing -> pure $ Left "Authorization header not found or invalid format"
