@@ -1,46 +1,46 @@
 module App.Schema where
 
 import Models (ModelExpenses, ModelMessages, ModelMeta, ModelUsers, ReqExpenseApi, ReqExpenseDeleteApi, ReqInfoPasswordApi, ReqInfoRenameApi, ReqMessageApi, ReqMessageDeleteApi, ReqMetaApi, ReqUserApi, ReqUserDeleteApi, ReqLoginApi)
-import Utils (Schema, validate)
+import Utils (Schema, schema)
 
 parseReqMessageApi :: Schema ReqMessageApi
-parseReqMessageApi = validate
+parseReqMessageApi = schema
 
 parseModelMessages :: Schema ModelMessages
-parseModelMessages = validate
+parseModelMessages = schema
 
 parseReqExpenseApi :: Schema ReqExpenseApi
-parseReqExpenseApi = validate
+parseReqExpenseApi = schema
 
 parseModelExpenses :: Schema ModelExpenses
-parseModelExpenses = validate
+parseModelExpenses = schema
 
 parseReqInfoRenameApi :: Schema ReqInfoRenameApi
-parseReqInfoRenameApi = validate
+parseReqInfoRenameApi = schema
 
 parseReqInfoPasswordApi :: Schema ReqInfoPasswordApi
-parseReqInfoPasswordApi = validate
+parseReqInfoPasswordApi = schema
 
 parseReqMetaApi :: Schema ReqMetaApi
-parseReqMetaApi = validate
+parseReqMetaApi = schema
 
 parseModelMeta :: Schema ModelMeta
-parseModelMeta = validate
+parseModelMeta = schema
 
 parseReqUserApi :: Schema ReqUserApi
-parseReqUserApi = validate
+parseReqUserApi = schema
 
 parseReqUserDeleteApi :: Schema ReqUserDeleteApi
-parseReqUserDeleteApi = validate
+parseReqUserDeleteApi = schema
 
 parseReqMessageDeleteApi :: Schema ReqMessageDeleteApi
-parseReqMessageDeleteApi = validate
+parseReqMessageDeleteApi = schema
 
 parseReqExpenseDeleteApi :: Schema ReqExpenseDeleteApi
-parseReqExpenseDeleteApi = validate
+parseReqExpenseDeleteApi = schema
 
 parseModelUsers :: Schema ModelUsers
-parseModelUsers = validate
+parseModelUsers = schema
 
 parseLoginInApi :: Schema ReqLoginApi
-parseLoginInApi = validate
+parseLoginInApi = schema

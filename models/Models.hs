@@ -97,7 +97,8 @@ data ResUserSingle = ResUserSingle
 type ResUserApi = [ResUserSingle]
 
 data ReqUserDeleteApi = ReqUserDeleteApi
-  { req_deleteUserId :: Int
+  { req_deleteUserId :: Int,
+    req_deleteForced :: Bool
   }
 
 data ReqMessageDeleteApi = ReqMessageDeleteApi

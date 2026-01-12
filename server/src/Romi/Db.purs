@@ -33,7 +33,8 @@ import Effect (Effect)
 import Effect.Aff (Aff)
 import Effect.Aff.Class (liftAff)
 import Romi.Common (Romi)
-import Utils (encodeJson, log')
+import Simple.JSON (class WriteForeign)
+import Utils (encodeSchema)
 
 data DB
 
@@ -57,21 +58,28 @@ foreign import dbPutOrPrim :: DB -> String -> String -> Effect (Promise Unit)
 dbPutOr :: DB -> String -> String -> Aff Unit
 dbPutOr db key value = toAffE $ dbPutOrPrim db key value
 
-foreign import dbPutOrIfPrim :: DB -> String -> String -> (String -> Boolean) -> Effect (Promise Unit)
+-- foreign import dbPutOrIfPrim :: DB -> String -> String -> (String -> Boolean) -> Effect (Promise Unit)
 
 dbPutOrIf :: DB -> String -> String -> (String -> Boolean) -> Aff Unit
-dbPutOrIf db key value cond = toAffE $ dbPutOrIfPrim db key value cond
+dbPutOrIf db key value cond = do
+  result <- liftAff $ dbGet db key
+  case result of
+    Just v -> if cond v then liftAff $ dbPut db key value else pure unit
+    Nothing -> liftAff $ dbPut db key value
 
 foreign import dbDelPrim :: DB -> String -> Effect (Promise Unit)
 
 dbDel :: DB -> String -> Aff Unit
 dbDel db key = toAffE $ dbDelPrim db key
 
-foreign import dbDelOrIfPrim :: DB -> String -> (String -> Boolean) -> Effect (Promise Unit)
-
+-- foreign import dbDelOrIfPrim :: DB -> String -> (String -> Boolean) -> Effect (Promise Unit)
 
 dbDelOrIf :: DB -> String -> (String -> Boolean) -> Aff Unit
-dbDelOrIf db key cond = toAffE $ dbDelOrIfPrim db key cond
+dbDelOrIf db key cond = do
+  result <- liftAff $ dbGet db key
+  case result of
+    Just v -> if cond v then liftAff $ dbDel db key else pure unit
+    Nothing -> pure unit
 
 data BatchOp = Put String String | Del String
 
@@ -110,9 +118,9 @@ askDB = ask >>= getDB
 type DBM b =
   forall a . ProvideDB a => Show b =>
     { get :: b -> Romi a (Maybe String)
-    , put :: forall c . b -> c -> Romi a Unit
-    , putOr :: forall c . b -> c -> Romi a Unit
-    , putOrIf :: forall c . b -> c -> (String -> Boolean) -> Romi a Unit
+    , put :: forall c . WriteForeign c => b -> c -> Romi a Unit
+    , putOr :: forall c . WriteForeign c => b -> c -> Romi a Unit
+    , putOrIf :: forall c . WriteForeign c => b -> c -> (String -> Boolean) -> Romi a Unit
     , del :: b -> Romi a Unit
     , delOrIf :: b -> (String -> Boolean) -> Romi a Unit
     , batch :: Array (BatchOpModel b) -> Romi a Unit
@@ -125,13 +133,13 @@ dbmOf =
       liftAff $ dbGet db $ show k
   , put: \k v -> do
       db <- askDB
-      liftAff $ dbPut db (show k) $ encodeJson v
+      liftAff $ dbPut db (show k) $ encodeSchema v
   , putOr: \k v -> do
       db <- askDB
-      liftAff $ dbPutOr db (show k) $ encodeJson v
+      liftAff $ dbPutOr db (show k) $ encodeSchema v
   , putOrIf: \k v cond -> do
       db <- askDB
-      liftAff $ dbPutOrIf db (show k) (encodeJson v) cond
+      liftAff $ dbPutOrIf db (show k) (encodeSchema v) cond
   , del: \k -> do
       db <- askDB
       liftAff $ dbDel db $ show k
@@ -150,9 +158,10 @@ type ListModel a b =
   { selectAll :: Romi a (Array b)
   , select :: (b -> Boolean) -> Romi a (Maybe b)
   , selectMany :: (b -> Boolean) -> Romi a (Array b)
+  , update :: (b -> Boolean) -> (b -> b) -> Romi a Unit
   , insert :: b -> Romi a Unit
   , insertMany :: Array b -> Romi a Unit
-  , delete :: (b -> Boolean) -> Romi a Unit
+  , deleteAll :: (b -> Boolean) -> Romi a Unit
   , count :: Romi a Int
   }
 
@@ -161,7 +170,7 @@ type ListModelApi a b =
   , parse :: String -> Either String (Array b)
   }
 
-createModel :: forall a b c. Show a => ProvideDB c => ListModelApi a b -> ListModel c b
+createModel :: forall a b c. Show a => ProvideDB c => WriteForeign b => ListModelApi a b -> ListModel c b
 createModel { key, parse } =
   let
     decode :: String -> Array b
@@ -169,12 +178,9 @@ createModel { key, parse } =
   in
   { selectAll: do
       datas <- dbmOf.get key
-      log' $ "get2 " <> show datas
-      case datas of
-        Just datas' -> do
-          log' $ "decode2" <> encodeJson (decode datas')
-          pure $ decode datas'
-        Nothing ->pure []
+      pure case datas of
+        Just datas' -> decode datas'
+        Nothing -> []
   , select: \cond -> do
       datas <- dbmOf.get key
       pure $ case datas of
@@ -185,24 +191,24 @@ createModel { key, parse } =
       pure $ case datas of
         Just datas' -> filter cond $ decode datas'
         Nothing -> []
+  ,
+    update: \cond update -> do
+      datas <- dbmOf.get key
+      dbmOf.put key case datas of
+        Just datas' -> map (\x -> if cond x then update x else x) $ decode datas'
+        Nothing -> []
   , insert: \v -> do
       datas <- dbmOf.get key
-      log' $ "insert before " <> encodeJson datas
       dbmOf.put key case datas of
         Just datas' -> snoc (decode datas') v
         Nothing -> [v]
-      log' $ "insert " <> encodeJson case datas of
-        Just datas' -> snoc (decode datas') v
-        Nothing -> [v]
-      datas'' <- dbmOf.get key
-      log' $ "get " <> show datas''
       pure unit
     , insertMany: \vs -> do
       datas <- dbmOf.get key
       dbmOf.put key case datas of
         Just datas' -> append (decode datas') vs
         Nothing -> vs
-    , delete: \cond -> do
+    , deleteAll: \cond -> do
       datas <- dbmOf.get key
       dbmOf.put key case datas of
             Just datas'' -> filter (not <<< cond) $ decode datas''

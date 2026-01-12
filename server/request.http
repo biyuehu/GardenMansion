@@ -1,7 +1,8 @@
 @URL = http://localhost:8080/api
 @USERNAME = admin
-@PASSWORD = 123456
-
+@PASSWORD = 1234526
+@TOKEN = YWRtaW4=:|:MTIzNDUyNg==
+# @TOKEN = bmV3VXNlcg==:|:MTIzNDU2
 
 ###
 
@@ -20,7 +21,7 @@ GET {{URL}}/messages HTTP/1.1
 ###
 
 POST {{URL}}/messages HTTP/1.1
-Authorization: YWRtaW4=:|:MTIzNDU2
+Authorization: {{TOKEN}}
 Body:
 
 {
@@ -30,8 +31,106 @@ Body:
 
 ###
 
+DELETE {{URL}}/messages HTTP/1.1
+Authorization: {{TOKEN}}
+Body:
+
+{
+  "deleteMessageId": 1
+}
+
+###
+
+GET {{URL}}/expenses HTTP/1.1
+
+###
+
+POST {{URL}}/expenses HTTP/1.1
+Authorization: {{TOKEN}}
+Body:
+
+{
+  "expenseAmount": 123,
+  "expenseComment": "some comment"
+}
+
+###
+
+DELETE  {{URL}}/expenses HTTP/1.1
+Authorization: {{TOKEN}}
+Body:
+
+{
+  "deleteExpenseId": 1
+}
+
+###
+
 GET {{URL}}/users HTTP/1.1
 
 ###
 
+POST {{URL}}/users HTTP/1.1
+Authorization: {{TOKEN}}
+Body:
+
+{
+  "userName": "newU2ser",
+  "userPassword": "123456",
+  "userAlive": true
+}
+
+###
+
+DELETE {{URL}}/users HTTP/1.1
+Authorization: {{TOKEN}}
+Body:
+
+{
+  "deleteUserId": 3,
+  "deleteForced": true
+}
+
+###
+
 GET {{URL}}/meta HTTP/1.1
+
+###
+
+PUT {{URL}}/meta HTTP/1.1
+Authorization: {{TOKEN}}
+Body:
+
+{
+  "webUrl": "http://localhost:8080",
+  "webName": "Garden Mansion",
+  "webTitle": "Welcome to Garden Mansion",
+  "webNotice": "This is a notice.",
+  "webStartTime": 1577836800000
+}
+
+###
+
+GET {{URL}}/info HTTP/1.1
+Authorization: {{TOKEN}}
+
+###
+
+PUT {{URL}}/info/rename HTTP/1.1
+Authorization: {{TOKEN}}
+Body:
+
+{
+  "infoUsername": "admin"
+}
+
+###
+
+PUT {{URL}}/info/password HTTP/1.1
+Authorization: {{TOKEN}}
+Body:
+
+{
+  "infoPasswordOld": "1234526",
+  "infoPasswordNew": "1234526"
+}

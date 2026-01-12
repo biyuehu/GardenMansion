@@ -3,13 +3,13 @@ module Utils
   , currentDir
   , decodeBase64
   , encodeBase64
-  , encodeJson
+  , encodeSchema
   , endsWith
   , filterMap
   , log'
   , pathJoin
+  , schema
   , startsWith
-  , validate
   )
   where
 
@@ -23,7 +23,7 @@ import Data.NonEmpty (NonEmpty(..))
 import Effect.Class (class MonadEffect, liftEffect)
 import Effect.Console (log)
 import Foreign (ForeignError(..))
-import Simple.JSON (class ReadForeign, readJSON)
+import Simple.JSON (class ReadForeign, class WriteForeign, readJSON, writeJSON)
 
 foreign import endsWith :: String -> String -> Boolean
 
@@ -45,10 +45,14 @@ showErrors = foldr (\err acc -> acc <> showError err <> ";") ""
     showError (ErrorAtIndex i err) = "Error at index " <> show i <> ": " <> showError err
     showError (ErrorAtProperty prop err) = "Error at property " <> prop <> ": " <> showError err
 
-validate :: forall a. ReadForeign a => Schema a
-validate str = case readJSON str of
+schema :: forall a. ReadForeign a => Schema a
+schema str = case readJSON str of
     Left (NonEmptyList (NonEmpty err a)) -> Left $ showErrors $ Cons err a
     Right x -> Right x
+
+encodeSchema :: forall a. WriteForeign a => a -> String
+encodeSchema s = writeJSON s
+
 
 foreign import currentDir :: String
 
@@ -57,7 +61,7 @@ foreign import pathJoin :: String -> String -> String
 log' ∷ ∀ (t24 ∷ Type -> Type). MonadEffect t24 ⇒ String → t24 Unit
 log' = liftEffect <<< log
 
-foreign import encodeJson :: forall a. a -> String
+-- foreign import encodeJson :: forall a. a -> String
 
 foreign import encodeBase64 :: String -> String
 

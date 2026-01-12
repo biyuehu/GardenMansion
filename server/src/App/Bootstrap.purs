@@ -25,7 +25,6 @@ dbInit = do
   db <- dbCreate dbDirectory dbPrefix
   runReaderT (do
     dbm.putOrIf Users defaultModelUsers $ isLeft <<< parseModelUsers
-    dbm.put Users defaultModelUsers
     dbm.putOrIf Messages "[]" $ isLeft <<< parseModelMessages
     dbm.putOrIf Expenses "[]" $ isLeft <<< parseModelExpenses
     dbm.putOrIf Meta defaultModelMeta $ isLeft <<< parseModelMeta

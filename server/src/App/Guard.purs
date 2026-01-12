@@ -7,7 +7,7 @@ import App.Schema (parseLoginInApi, parseReqExpenseApi, parseReqExpenseDeleteApi
 import App.Types (GuardState)
 import Data.Bifunctor (lmap)
 import Data.Either (Either(..))
-import Models (ModelUserSingle, ReqExpenseApi, ReqExpenseDeleteApi, ReqInfoPasswordApi, ReqInfoRenameApi, ReqMessageApi, ReqMessageDeleteApi, ReqMetaApi, ReqUserApi, ReqUserDeleteApi, ReqLoginApi)
+import Models (ModelUserSingle, ReqExpenseApi, ReqExpenseDeleteApi, ReqInfoPasswordApi, ReqInfoRenameApi, ReqLoginApi, ReqMessageApi, ReqMetaApi, ReqUserApi, ReqUserDeleteApi, ReqMessageDeleteApi)
 import Romi.Response (errorForbidden, errorSchema)
 
 

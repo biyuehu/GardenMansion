@@ -4,8 +4,10 @@ module Romi.Response
   , ResponseRaw
   , Status(..)
   , class Responseable
+  , errorBadRequest
   , errorForbidden
   , errorSchema
+  , errorUnauthorized
   , setResponse
   , toResponse
   , toResponseRaw
@@ -68,11 +70,19 @@ toResponseRaw (HtmlStatusRes status body) = { status: toInt status, headers: [Tu
 toResponseRaw (TextStatusRes status body) = { status: toInt status, headers: [Tuple "Content-Type" "text/plain"], body }
 toResponseRaw (Raw res) = res
 
+type ErrorReponse = { code :: Int, error :: String }
+
 errorSchema :: String -> Response
-errorSchema err = JsonStatusRes BadRequest $ show {"error":err}
+errorSchema err = JsonStatusRes BadRequest $ show ({"error": err, "code": toInt BadRequest} :: ErrorReponse)
 
 errorForbidden :: String -> Response
-errorForbidden err = JsonStatusRes Forbidden $ show {"error":err}
+errorForbidden err = JsonStatusRes Forbidden $ show {"error": err, "code": toInt Forbidden}
+
+errorBadRequest :: String -> Response
+errorBadRequest err = JsonStatusRes BadRequest $ show {"error": err, "code": toInt BadRequest}
+
+errorUnauthorized :: String -> Response
+errorUnauthorized err = JsonStatusRes Unauthorized $ show {"error": err, "code": toInt Unauthorized}
 
 derive instance Eq Response
 
