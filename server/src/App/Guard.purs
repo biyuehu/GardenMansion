@@ -2,60 +2,62 @@ module App.Guard where
 
 import Prelude
 
-import App.Auth (selectAuthUser)
+import App.Auth (parseToken)
+import App.Models (users)
 import App.Schema (parseLoginInApi, parseReqExpenseApi, parseReqExpenseDeleteApi, parseReqInfoPasswordApi, parseReqInfoRenameApi, parseReqMessageApi, parseReqMessageDeleteApi, parseReqMetaApi, parseReqUserApi, parseReqUserDeleteApi)
-import App.Types (GuardState)
+import App.Types (Guard')
+import Control.Monad.Except (except)
 import Data.Bifunctor (lmap)
-import Data.Either (Either(..))
+import Data.Maybe (Maybe(..))
 import Models (ModelUserSingle, ReqExpenseApi, ReqExpenseDeleteApi, ReqInfoPasswordApi, ReqInfoRenameApi, ReqLoginApi, ReqMessageApi, ReqMetaApi, ReqUserApi, ReqUserDeleteApi, ReqMessageDeleteApi)
+import Romi.Core (response)
+import Romi.Request (select)
 import Romi.Response (errorForbidden, errorSchema)
 
 
-authFactory :: forall a. GuardState a -> GuardState { dat :: a, user :: ModelUserSingle }
-authFactory f req = do
-  result <- f req
-  case result of
-    Left res -> pure $ Left res
-    Right dat -> do
-      user <- selectAuthUser req
-      case user of
-        Left err -> pure $ Left $ errorForbidden err
-        Right user' -> pure $ Right { dat, user: user' }
+
+requireAuthUser :: Guard' ModelUserSingle
+requireAuthUser req = case select req.headers "authorization" >>= parseToken of
+  Just { name, password } -> do
+    user <- users.select (\{userName, userPassword, userAlive} -> userName == name && userPassword == password && userAlive)
+    case user of
+      Just user' -> pure user'
+      Nothing -> response $ errorForbidden "Invalid credentials"
+  Nothing -> response $ errorForbidden "Authorization header not found or invalid format"
 
 
-authAdminFactory :: forall a. GuardState a -> GuardState { dat :: a, user :: ModelUserSingle }
-authAdminFactory f req = do
-  result <- authFactory f req
-  case result of
-    Left res -> pure $ Left res
-    Right { dat, user } -> pure $ if user.userAdmin then Right { dat, user } else Left $ errorForbidden "User is not an admin"
 
-checkLogginIn :: GuardState ReqLoginApi
-checkLogginIn req = pure $ lmap errorSchema $ parseLoginInApi req.body
+requireAuthAdmin :: Guard' ModelUserSingle
+requireAuthAdmin req = do
+  user <- requireAuthUser req
+  if user.userAdmin then pure user else response $ errorForbidden "User is not an admin"
 
-checkCreatingMessage :: GuardState ReqMessageApi
-checkCreatingMessage req = pure $ lmap errorSchema $ parseReqMessageApi req.body
+selectLogginIn :: Guard' ReqLoginApi
+selectLogginIn req = except $ lmap errorSchema $ parseLoginInApi req.body
 
-checkCreatingExpense :: GuardState ReqExpenseApi
-checkCreatingExpense req = pure $ lmap errorSchema $ parseReqExpenseApi req.body
+selectCreatingMessage :: Guard' ReqMessageApi
+selectCreatingMessage req = except $ lmap errorSchema $ parseReqMessageApi req.body
 
-checkRenaming :: GuardState ReqInfoRenameApi
-checkRenaming req = pure $ lmap errorSchema $ parseReqInfoRenameApi req.body
+selectCreatingExpense :: Guard' ReqExpenseApi
+selectCreatingExpense req = except $ lmap errorSchema $ parseReqExpenseApi req.body
 
-checkChangeingPassword :: GuardState ReqInfoPasswordApi
-checkChangeingPassword req = pure $ lmap errorSchema $ parseReqInfoPasswordApi req.body
+selectRenaming :: Guard' ReqInfoRenameApi
+selectRenaming req = except $ lmap errorSchema $ parseReqInfoRenameApi req.body
 
-checkUpdatingMeta :: GuardState ReqMetaApi
-checkUpdatingMeta req = pure $ lmap errorSchema $ parseReqMetaApi req.body
+selectChangeingPassword :: Guard' ReqInfoPasswordApi
+selectChangeingPassword req = except $ lmap errorSchema $ parseReqInfoPasswordApi req.body
 
-checkCreatingUser :: GuardState ReqUserApi
-checkCreatingUser req = pure $ lmap errorSchema $ parseReqUserApi req.body
+selectUpdatingMeta :: Guard' ReqMetaApi
+selectUpdatingMeta req = except $ lmap errorSchema $ parseReqMetaApi req.body
 
-checkDeletingUser :: GuardState ReqUserDeleteApi
-checkDeletingUser req = pure $ lmap errorSchema $ parseReqUserDeleteApi req.body
+selectCreatingUser :: Guard' ReqUserApi
+selectCreatingUser req = except $ lmap errorSchema $ parseReqUserApi req.body
 
-checkDeletingMessage :: GuardState ReqMessageDeleteApi
-checkDeletingMessage req = pure $ lmap errorSchema $ parseReqMessageDeleteApi req.body
+selectDeletingUser :: Guard' ReqUserDeleteApi
+selectDeletingUser req = except $ lmap errorSchema $ parseReqUserDeleteApi req.body
 
-checkDeletingExpense :: GuardState ReqExpenseDeleteApi
-checkDeletingExpense req = pure $ lmap errorSchema $ parseReqExpenseDeleteApi req.body
+selectDeletingMessage :: Guard' ReqMessageDeleteApi
+selectDeletingMessage req = except $ lmap errorSchema $ parseReqMessageDeleteApi req.body
+
+selectDeletingExpense :: Guard' ReqExpenseDeleteApi
+selectDeletingExpense req = except $ lmap errorSchema $ parseReqExpenseDeleteApi req.body

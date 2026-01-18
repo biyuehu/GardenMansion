@@ -6,6 +6,7 @@ module Romi.Response
   , class Responseable
   , errorBadRequest
   , errorForbidden
+  , errorNotFound
   , errorSchema
   , errorUnauthorized
   , setResponse
@@ -83,6 +84,9 @@ errorBadRequest err = JsonStatusRes BadRequest $ show {"error": err, "code": toI
 
 errorUnauthorized :: String -> Response
 errorUnauthorized err = JsonStatusRes Unauthorized $ show {"error": err, "code": toInt Unauthorized}
+
+errorNotFound :: String -> Response
+errorNotFound err = JsonStatusRes NotFound $ show {"error": err, "code": toInt NotFound}
 
 derive instance Eq Response
 

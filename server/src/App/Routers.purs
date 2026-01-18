@@ -3,16 +3,16 @@ module App.Route
   )
   where
 
-import App.Components (logger)
+-- import App.Components (logger)
+
 import App.Handler (changePasswordInfo, createExpense, createMessage, createUser, deleteExpense, deleteMessage, deleteUser, fetchAllExpenses, fetchAllMessages, fetchAllUsers, fetchInfo, fetchMeta, loginIn, updateMeta)
-import App.Types (State)
-import Romi.Components (Component(..), Components, Rule(..))
+import App.Types (Env)
+import Romi.Core (Route(..), Routes)
 import Romi.Request (Method(..))
 
-routers :: Components State
+routers :: Routes Env
 routers =
-  [ Before Any logger
-  , Route GET "/api/messages" fetchAllMessages
+  [ Route GET "/api/messages" fetchAllMessages
   , Route POST "/api/messages" createMessage
   , Route DELETE "/api/messages" deleteMessage
   , Route GET "/api/expenses" fetchAllExpenses

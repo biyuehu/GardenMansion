@@ -3,7 +3,7 @@ module Romi.Db
   ( BatchOp(..)
   , BatchOpModel(..)
   , DB
-  , DBM
+  , DBOps
   , ListModel
   , askDB
   , class ProvideDB
@@ -14,10 +14,10 @@ module Romi.Db
   , dbDel
   , dbDelOrIf
   , dbGet
+  , dbOpsOf
   , dbPut
   , dbPutOr
   , dbPutOrIf
-  , dbmOf
   , getDB
   )
   where
@@ -32,7 +32,7 @@ import Data.Maybe (Maybe(..))
 import Effect (Effect)
 import Effect.Aff (Aff)
 import Effect.Aff.Class (liftAff)
-import Romi.Common (Romi)
+import Romi.Core (Romi)
 import Simple.JSON (class WriteForeign)
 import Utils (encodeSchema)
 
@@ -115,19 +115,19 @@ askDB :: forall a. ProvideDB a => Romi a DB
 askDB = ask >>= getDB
 
 
-type DBM b =
-  forall a . ProvideDB a => Show b =>
-    { get :: b -> Romi a (Maybe String)
-    , put :: forall c . WriteForeign c => b -> c -> Romi a Unit
-    , putOr :: forall c . WriteForeign c => b -> c -> Romi a Unit
-    , putOrIf :: forall c . WriteForeign c => b -> c -> (String -> Boolean) -> Romi a Unit
-    , del :: b -> Romi a Unit
-    , delOrIf :: b -> (String -> Boolean) -> Romi a Unit
-    , batch :: Array (BatchOpModel b) -> Romi a Unit
+type DBOps b =
+  forall env . ProvideDB env => Show b =>
+    { get :: b -> Romi env (Maybe String)
+    , put :: forall c . WriteForeign c => b -> c -> Romi env Unit
+    , putOr :: forall c . WriteForeign c => b -> c -> Romi env Unit
+    , putOrIf :: forall c . WriteForeign c => b -> c -> (String -> Boolean) -> Romi env Unit
+    , del :: b -> Romi env Unit
+    , delOrIf :: b -> (String -> Boolean) -> Romi env Unit
+    , batch :: Array (BatchOpModel b) -> Romi env Unit
     }
 
-dbmOf :: forall a. DBM a
-dbmOf =
+dbOpsOf :: forall env. DBOps env
+dbOpsOf =
   { get: \k -> do
       db <- askDB
       liftAff $ dbGet db $ show k
@@ -177,44 +177,44 @@ createModel { key, parse } =
     decode = fromRight [] <<< parse
   in
   { selectAll: do
-      datas <- dbmOf.get key
+      datas <- dbOpsOf.get key
       pure case datas of
         Just datas' -> decode datas'
         Nothing -> []
   , select: \cond -> do
-      datas <- dbmOf.get key
+      datas <- dbOpsOf.get key
       pure $ case datas of
         Just datas' -> find cond $ decode datas'
         Nothing -> Nothing
   , selectMany: \cond -> do
-      datas <- dbmOf.get key
+      datas <- dbOpsOf.get key
       pure $ case datas of
         Just datas' -> filter cond $ decode datas'
         Nothing -> []
   ,
     update: \cond update -> do
-      datas <- dbmOf.get key
-      dbmOf.put key case datas of
+      datas <- dbOpsOf.get key
+      dbOpsOf.put key case datas of
         Just datas' -> map (\x -> if cond x then update x else x) $ decode datas'
         Nothing -> []
   , insert: \v -> do
-      datas <- dbmOf.get key
-      dbmOf.put key case datas of
+      datas <- dbOpsOf.get key
+      dbOpsOf.put key case datas of
         Just datas' -> snoc (decode datas') v
         Nothing -> [v]
       pure unit
     , insertMany: \vs -> do
-      datas <- dbmOf.get key
-      dbmOf.put key case datas of
+      datas <- dbOpsOf.get key
+      dbOpsOf.put key case datas of
         Just datas' -> append (decode datas') vs
         Nothing -> vs
     , deleteAll: \cond -> do
-      datas <- dbmOf.get key
-      dbmOf.put key case datas of
+      datas <- dbOpsOf.get key
+      dbOpsOf.put key case datas of
             Just datas'' -> filter (not <<< cond) $ decode datas''
             Nothing -> []
     , count: do
-      datas <- dbmOf.get key
+      datas <- dbOpsOf.get key
       pure $ case datas of
         Just datas' -> length $ decode datas'
         Nothing -> 0

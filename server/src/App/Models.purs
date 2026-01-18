@@ -1,6 +1,6 @@
 module App.Models
   ( DBKey(..)
-  , dbm
+  , dbOps
   , expenses
   , messages
   , users
@@ -10,9 +10,9 @@ module App.Models
 import Prelude
 
 import App.Schema (parseModelExpenses, parseModelMessages, parseModelUsers)
-import App.Types (State)
+import App.Types (Env)
 import Models (ModelUserSingle, ResMessageSingle, ResExpenseSingle)
-import Romi.Db (DBM, ListModel, createModel, dbmOf)
+import Romi.Db (ListModel, DBOps, createModel, dbOpsOf)
 
 data DBKey = Users | Expenses | Messages | Meta
 
@@ -22,10 +22,10 @@ instance Show DBKey where
   show Messages = "messages"
   show Meta = "meta"
 
-dbm :: DBM DBKey
-dbm = dbmOf
+dbOps :: DBOps DBKey
+dbOps = dbOpsOf
 
-type ListModel' a = ListModel State a
+type ListModel' a = ListModel Env a
 
 users :: ListModel' ModelUserSingle
 users = createModel
