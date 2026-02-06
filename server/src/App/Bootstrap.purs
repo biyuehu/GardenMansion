@@ -17,26 +17,27 @@ import Data.Maybe (Maybe(..))
 import Effect.Aff (Aff)
 import Effect.Class (liftEffect)
 import Effect.Console (log)
-import Romi.Db (DB, dbCreate)
+import Romi.Db (dbCreate)
 import Romi.Server (createServer, listen)
 import Utils (log')
 
-dbInit :: Aff DB
-dbInit = do
+envInit :: Aff Env
+envInit = do
   db <- dbCreate dbDirectory dbPrefix
-  runReaderT (runExceptT (do
+  let env = Env { db, user: Nothing }
+  _ <- runReaderT (runExceptT (do
     dbOps.putOrIf Users defaultModelUsers $ isLeft <<< parseModelUsers
     dbOps.putOrIf Messages "[]" $ isLeft <<< parseModelMessages
     dbOps.putOrIf Expenses "[]" $ isLeft <<< parseModelExpenses
     dbOps.putOrIf Meta defaultModelMeta $ isLeft <<< parseModelMeta
     pure unit
-  )) db
-  pure db
+  )) env
+  pure env
 
 
 bootstrap :: Aff Unit
 bootstrap = do
-  db <- dbInit
+  env <- envInit
   log' "starting server..."
-  server <- createServer routers (Env { db, user: Nothing }) Nothing
+  server <- createServer routers env Nothing
   liftEffect $ listen server defaultServerPort (log $ "Server is running on http://localhost:" <> show defaultServerPort)

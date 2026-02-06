@@ -5,34 +5,33 @@ module Romi.Db
   , DB
   , DBOps
   , ListModel
-  , askDB
   , class ProvideDB
-  , createModel
+  , getDB
+  , makeModel
   , dbBatch
   , dbClose
   , dbCreate
   , dbDel
   , dbDelOrIf
   , dbGet
-  , dbOpsOf
   , dbPut
   , dbPutOr
   , dbPutOrIf
-  , getDB
+  , dbOpsOf
   )
   where
 
 import Prelude
 
-import Control.Monad.Reader (ask)
+import Control.Monad.Error.Class (class MonadError)
+import Control.Monad.Reader (class MonadReader, ask)
 import Control.Promise (Promise, toAffE)
 import Data.Array (filter, find, length, snoc)
 import Data.Either (Either, fromRight)
 import Data.Maybe (Maybe(..))
 import Effect (Effect)
 import Effect.Aff (Aff)
-import Effect.Aff.Class (liftAff)
-import Romi.Core (Romi)
+import Effect.Aff.Class (class MonadAff, liftAff)
 import Simple.JSON (class WriteForeign)
 import Utils (encodeSchema)
 
@@ -105,75 +104,80 @@ foreign import dbClosePrim :: DB -> Effect (Promise Unit)
 dbClose :: DB -> Aff Unit
 dbClose db = toAffE $ dbClosePrim db
 
-class ProvideDB a where
-  getDB :: a -> Romi a DB
+class ProvideDB env where
+  getDB :: forall m. MonadReader env m => env -> m DB
 
-instance ProvideDB DB where
-  getDB = pure
-
-askDB :: forall a. ProvideDB a => Romi a DB
-askDB = ask >>= getDB
-
-
-type DBOps b =
-  forall env . ProvideDB env => Show b =>
-    { get :: b -> Romi env (Maybe String)
-    , put :: forall c . WriteForeign c => b -> c -> Romi env Unit
-    , putOr :: forall c . WriteForeign c => b -> c -> Romi env Unit
-    , putOrIf :: forall c . WriteForeign c => b -> c -> (String -> Boolean) -> Romi env Unit
-    , del :: b -> Romi env Unit
-    , delOrIf :: b -> (String -> Boolean) -> Romi env Unit
-    , batch :: Array (BatchOpModel b) -> Romi env Unit
+type DBOps m k =
+    { get :: k -> m (Maybe String)
+    , put :: forall c . WriteForeign c => k -> c -> m Unit
+    , putOr :: forall c . WriteForeign c => k -> c -> m Unit
+    , putOrIf :: forall c . WriteForeign c => k -> c -> (String -> Boolean) -> m Unit
+    , del :: k -> m Unit
+    , delOrIf :: k -> (String -> Boolean) -> m Unit
+    , batch :: Array (BatchOpModel k) -> m Unit
     }
 
-dbOpsOf :: forall env. DBOps env
+dbOpsOf :: forall env keys m err .
+          MonadError err m =>
+          MonadReader env m =>
+          MonadAff m =>
+          ProvideDB env =>
+          Show keys =>
+          DBOps m keys
 dbOpsOf =
   { get: \k -> do
-      db <- askDB
+      db <- ask >>= getDB
       liftAff $ dbGet db $ show k
   , put: \k v -> do
-      db <- askDB
+      db <- ask >>= getDB
       liftAff $ dbPut db (show k) $ encodeSchema v
   , putOr: \k v -> do
-      db <- askDB
+      db <- ask >>= getDB
       liftAff $ dbPutOr db (show k) $ encodeSchema v
   , putOrIf: \k v cond -> do
-      db <- askDB
+      db <- ask >>= getDB
       liftAff $ dbPutOrIf db (show k) (encodeSchema v) cond
   , del: \k -> do
-      db <- askDB
+      db <- ask >>= getDB
       liftAff $ dbDel db $ show k
   , delOrIf: \k cond -> do
-      db <- askDB
+      db <- ask >>= getDB
       liftAff $ dbDelOrIf db (show k) cond
   , batch: \ops -> do
-      db <- askDB
+      db <- ask >>= getDB
       liftAff $ dbBatch db $ map (\x -> case x of
         PutM k v -> Put (show k) v
         DelM k -> Del (show k)
       ) ops
   }
 
-type ListModel a b =
-  { selectAll :: Romi a (Array b)
-  , select :: (b -> Boolean) -> Romi a (Maybe b)
-  , selectMany :: (b -> Boolean) -> Romi a (Array b)
-  , update :: (b -> Boolean) -> (b -> b) -> Romi a Unit
-  , insert :: b -> Romi a Unit
-  , insertMany :: Array b -> Romi a Unit
-  , deleteAll :: (b -> Boolean) -> Romi a Unit
-  , count :: Romi a Int
+type ListModel m b =
+  { selectAll :: m (Array b)
+  , select :: (b -> Boolean) -> m (Maybe b)
+  , selectMany :: (b -> Boolean) -> m (Array b)
+  , update :: (b -> Boolean) -> (b -> b) -> m Unit
+  , insert :: b -> m Unit
+  , insertMany :: Array b -> m Unit
+  , deleteAll :: (b -> Boolean) -> m Unit
+  , count :: m Int
   }
 
-type ListModelApi a b =
-  { key :: a
-  , parse :: String -> Either String (Array b)
+type ListModelApi keys dat =
+  { key :: keys
+  , parse :: String -> Either String (Array dat)
   }
 
-createModel :: forall a b c. Show a => ProvideDB c => WriteForeign b => ListModelApi a b -> ListModel c b
-createModel { key, parse } =
+makeModel :: forall keys dat env err m.
+  MonadError err m =>
+  MonadReader env m =>
+  MonadAff m =>
+  Show keys =>
+  WriteForeign dat =>
+  ProvideDB env =>
+  ListModelApi keys dat -> ListModel m dat
+makeModel { key, parse } =
   let
-    decode :: String -> Array b
+    decode :: String -> Array dat
     decode = fromRight [] <<< parse
   in
   { selectAll: do
@@ -219,4 +223,3 @@ createModel { key, parse } =
         Just datas' -> length $ decode datas'
         Nothing -> 0
   }
-

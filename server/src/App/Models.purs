@@ -12,7 +12,8 @@ import Prelude
 import App.Schema (parseModelExpenses, parseModelMessages, parseModelUsers)
 import App.Types (Env)
 import Models (ModelUserSingle, ResMessageSingle, ResExpenseSingle)
-import Romi.Db (ListModel, DBOps, createModel, dbOpsOf)
+import Romi.Core (Romi)
+import Romi.Db (DBOps, ListModel, makeModel, dbOpsOf)
 
 data DBKey = Users | Expenses | Messages | Meta
 
@@ -22,25 +23,25 @@ instance Show DBKey where
   show Messages = "messages"
   show Meta = "meta"
 
-dbOps :: DBOps DBKey
+dbOps :: DBOps (Romi Env) DBKey
 dbOps = dbOpsOf
 
-type ListModel' a = ListModel Env a
+type ListModel' a = ListModel (Romi Env) a
 
 users :: ListModel' ModelUserSingle
-users = createModel
+users = makeModel
   { key: Users
   , parse: parseModelUsers
   }
 
 messages :: ListModel' ResMessageSingle
-messages = createModel
+messages = makeModel
   { key: Messages
   , parse: parseModelMessages
   }
 
 expenses :: ListModel' ResExpenseSingle
-expenses = createModel
+expenses = makeModel
   { key: Expenses
   , parse: parseModelExpenses
   }
