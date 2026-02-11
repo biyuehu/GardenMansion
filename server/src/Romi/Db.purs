@@ -117,8 +117,7 @@ type DBOps m k =
     , batch :: Array (BatchOpModel k) -> m Unit
     }
 
-dbOpsOf :: forall env keys m err .
-          MonadError err m =>
+dbOpsOf :: forall env keys m .
           MonadReader env m =>
           MonadAff m =>
           ProvideDB env =>
@@ -167,8 +166,7 @@ type ListModelApi keys dat =
   , parse :: String -> Either String (Array dat)
   }
 
-makeModel :: forall keys dat env err m.
-  MonadError err m =>
+makeModel :: forall keys dat env m.
   MonadReader env m =>
   MonadAff m =>
   Show keys =>

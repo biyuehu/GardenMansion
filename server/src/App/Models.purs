@@ -12,7 +12,6 @@ import Prelude
 import App.Schema (parseModelExpenses, parseModelMessages, parseModelUsers)
 import App.Types (Env)
 import Models (ModelUserSingle, ResMessageSingle, ResExpenseSingle)
-import Romi.Core (Romi)
 import Romi.Db (DBOps, ListModel, makeModel, dbOpsOf)
 
 data DBKey = Users | Expenses | Messages | Meta

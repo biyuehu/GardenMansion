@@ -15,7 +15,6 @@ import Romi.Request (select)
 import Romi.Response (errorForbidden, errorSchema)
 
 
-
 requireAuthUser :: Guard' ModelUserSingle
 requireAuthUser req = case select req.headers "authorization" >>= parseToken of
   Just { name, password } -> do
