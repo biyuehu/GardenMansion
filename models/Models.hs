@@ -56,10 +56,10 @@ data ReqInfoPasswordApi = ReqInfoPasswordApi
 data ResInfoApi = ResInfoApi
   { res_infoId :: Int,
     res_infoName :: String,
+    res_infoNickname :: String,
     -- res_infoEmail :: String,
     res_infoTime :: Double,
-    res_infoAlive :: Bool,
-    res_infoAdmin :: Bool
+    res_infoLevel :: Int
   }
 
 data ReqMetaApi = ReqMetaApi
@@ -82,16 +82,16 @@ type ModelMeta = ResMetaApi
 
 data ReqUserApi = ReqUserApi
   { req_userName :: String,
-    req_userPassword :: String,
-    req_userAlive :: Bool
+    req_userNickname :: String,
+    req_userPassword :: String
   }
 
 data ResUserSingle = ResUserSingle
   { res_userId :: Int,
     res_userName :: String,
+    res_userNickname :: String,
     res_userTime :: Double,
-    res_userAlive :: Bool,
-    res_userAdmin :: Bool
+    res_userLevel :: Int
   }
 
 type ResUserApi = [ResUserSingle]
@@ -112,11 +112,11 @@ data ReqExpenseDeleteApi = ReqExpenseDeleteApi
 data ModelUserSingle = ModelUserSingle
   { userId :: Int,
     userName :: String,
+    userNickname :: String,
     userPassword :: String,
     -- userEmail :: String,
     userTime :: Double,
-    userAlive :: Bool,
-    userAdmin :: Bool
+    userLevel :: Int -- -1: banned, 0: normal user, 1: admin
   }
 
 type ModelUsers = [ModelUserSingle]

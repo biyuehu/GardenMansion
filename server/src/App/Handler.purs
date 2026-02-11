@@ -4,11 +4,12 @@ import Prelude
 
 import App.Auth (generateToken)
 import App.Guard (requireAuthAdmin, requireAuthUser, selectChangeingPassword, selectCreatingExpense, selectCreatingMessage, selectCreatingUser, selectDeletingExpense, selectDeletingMessage, selectDeletingUser, selectLogginIn, selectRenaming, selectUpdatingMeta)
-import App.Models (DBKey(..), dbOps, expenses, messages, users)
+import App.Models (DBKey(..), dbOps, expenses, messages, userIsAccesible, users)
 import App.Types (Handler')
-import Data.Array (find, length)
+import Control.Monad.Error.Class (throwError)
+import Data.Array (find)
 import Data.JSDate (getTime, now)
-import Data.Maybe (Maybe(..), isJust, maybe)
+import Data.Maybe (Maybe(..), isJust, isNothing, maybe)
 import Effect.Class (liftEffect)
 import Models (ResExpenseApi, ResMessageApi, ResUserApi, ResInfoApi)
 import Romi.Response (Response(..), Status(..), errorBadRequest, errorForbidden, errorUnauthorized)
@@ -22,10 +23,10 @@ createMessage :: Handler'
 createMessage req = do
   user <- requireAuthUser req
   { messageText, messageReplyId } <- selectCreatingMessage req
-  count <- messages.count
+  messageId <- messages.rowId
   now <- liftEffect now
   messages.insert
-    { messageId: count + 1
+    { messageId
     , messageText
     , messageUserId: user.userId
     , messageReplyId
@@ -49,10 +50,10 @@ createExpense :: Handler'
 createExpense req = do
   user <- requireAuthAdmin req
   { expenseAmount, expenseComment } <- selectCreatingExpense req
-  count <- expenses.count
+  expenseId <- expenses.rowId
   now <- liftEffect now
   expenses.insert
-    { expenseId: count + 1
+    { expenseId
     , expenseAmount
     , expenseComment
     , expenseUserId: user.userId
@@ -70,38 +71,40 @@ deleteExpense req = do
 fetchAllUsers :: Handler'
 fetchAllUsers _ = do
   usersList <- users.selectAll
-  pure $ JsonRes $ show $ (map (\{userId, userName, userAlive, userAdmin, userTime} -> { userId, userName, userAlive, userAdmin, userTime }) usersList :: ResUserApi)
+  pure $ JsonRes $ show $ (map (\{userId, userName, userNickname,userLevel, userTime} -> { userId, userName, userNickname, userLevel, userTime }) usersList :: ResUserApi)
 
 createUser :: Handler'
 createUser req = do
   _ <- requireAuthAdmin req
-  { userName, userPassword, userAlive } <- selectCreatingUser req
+  { userName, userPassword, userNickname } <- selectCreatingUser req
   usersList <- users.selectAll
-  if isJust (find (\u -> u.userName == userName) usersList) then 
-    pure $ errorBadRequest "Username already exists" 
-  else do
-    now <- liftEffect now
-    users.insert
-      { userId: length usersList + 1
-      , userName
-      , userPassword
-      , userAlive
-      , userAdmin: false
-      , userTime: getTime now
-      }
-    pure $ StatusRes Created
+
+  when (isJust $ find (\u -> u.userName == userName) usersList) $ throwError $ errorBadRequest "Username already exists"
+
+  userId <- users.rowId
+  now <- liftEffect now
+  users.insert
+    { userId
+    , userName
+    , userNickname
+    , userPassword
+    , userLevel: 0
+    , userTime: getTime now
+    }
+  pure $ StatusRes Created
 
 deleteUser :: Handler'
 deleteUser req = do
   user <- requireAuthAdmin req
   { deleteUserId, deleteForced } <- selectDeletingUser req
-  if deleteUserId == user.userId then
-    pure $ errorForbidden "Forbidden to delete administrator user"
-  else if deleteForced then do
+
+  when (deleteUserId == user.userId) $ throwError $ errorForbidden "Forbidden to delete yourself"
+
+  if deleteForced then do
     users.deleteAll (\u -> u.userId == deleteUserId)
     pure $ StatusRes NoContent
   else do
-    users.update (\u -> u.userId == deleteUserId) (\u -> u { userAlive = false })
+    users.update (\u -> u.userId == deleteUserId) (\u -> u { userLevel = -1 })
     pure $ StatusRes NoContent
 
 fetchMeta :: Handler'
@@ -122,38 +125,41 @@ fetchInfo req = do
   pure $ JsonRes $ show
     ({ infoId: user.userId
     , infoName: user.userName
-    , infoAlive: user.userAlive
-    , infoAdmin: user.userAdmin
+    , infoNickname: user.userNickname
+    , infoLevel: user.userLevel
     , infoTime: user.userTime
     } :: ResInfoApi)
 
 renameInfo :: Handler'
 renameInfo req = do
-  user <- requireAuthUser req
+  { userId } <- requireAuthUser req
   { infoUsername } <- selectRenaming req
   usersList <- users.selectAll
-  if isJust (find (\u -> u.userName == infoUsername && u.userId /= user.userId) usersList) then pure $ errorBadRequest "Username already exists"
-  else do
-    dbOps.put Users $ map (\u -> if u.userId == user.userId then u { userName = infoUsername } else u) usersList
-    pure $ StatusRes OK
+
+  when (isJust $ find (\u -> u.userName == infoUsername && u.userId /= userId) usersList) $ throwError $ errorBadRequest "Username already exists"
+
+  dbOps.put Users $ map (\u -> if u.userId == userId then u { userNickname = infoUsername } else u) usersList
+  pure $ StatusRes OK
 
 changePasswordInfo :: Handler'
 changePasswordInfo req = do
-  user <- requireAuthUser req
+  { userId } <- requireAuthUser req
   { infoPasswordNew, infoPasswordOld } <- selectChangeingPassword req
-  if infoPasswordNew == infoPasswordOld then pure $ errorBadRequest "New password is the same as the old one"
-  else do
-    usersList <- users.selectAll
-    case find (\u -> u.userId == user.userId && u.userPassword == infoPasswordOld) usersList of
-      Just _ -> do
-        dbOps.put Users $ map (\u -> if u.userId == user.userId then u { userPassword = infoPasswordNew } else u) usersList
-        pure $ StatusRes OK
-      Nothing -> pure $ errorForbidden "Invalid old password"
+
+  when (infoPasswordNew == infoPasswordOld) $ throwError $ errorBadRequest "New password is the same as the old one"
+
+  usersList <- users.selectAll
+
+  when (isNothing $ find (\u -> u.userId == userId && u.userPassword == infoPasswordOld) usersList) $ throwError $ errorForbidden "Invalid old password"
+
+  pure $ StatusRes OK
 
 loginIn :: Handler'
 loginIn req = do
   { loginUsername, loginPassword } <- selectLogginIn req
   usersList <- users.selectAll
   case find (\u -> u.userName == loginUsername && u.userPassword == loginPassword) usersList of
-    Just _ -> pure $ JsonRes $ show { "token": generateToken { name: loginUsername, password: loginPassword } }
-    Nothing -> pure $ errorUnauthorized "Invalid username or password"
+    Just user -> do
+      when (not $ userIsAccesible user) $ throwError $ errorForbidden "User had been banned"
+      pure $ JsonRes $ show { "token": generateToken { name: loginUsername, password: loginPassword } }
+    Nothing -> throwError $ errorUnauthorized "Invalid username or password"

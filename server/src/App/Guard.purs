@@ -3,10 +3,10 @@ module App.Guard where
 import Prelude
 
 import App.Auth (parseToken)
-import App.Models (users)
+import App.Models (userIsAccesible, userIsAdmin, users)
 import App.Schema (parseLoginInApi, parseReqExpenseApi, parseReqExpenseDeleteApi, parseReqInfoPasswordApi, parseReqInfoRenameApi, parseReqMessageApi, parseReqMessageDeleteApi, parseReqMetaApi, parseReqUserApi, parseReqUserDeleteApi)
 import App.Types (Guard')
-import Control.Monad.Except (except)
+import Control.Monad.Except (except, throwError)
 import Data.Bifunctor (lmap)
 import Data.Maybe (Maybe(..))
 import Models (ModelUserSingle, ReqExpenseApi, ReqExpenseDeleteApi, ReqInfoPasswordApi, ReqInfoRenameApi, ReqLoginApi, ReqMessageApi, ReqMetaApi, ReqUserApi, ReqUserDeleteApi, ReqMessageDeleteApi)
@@ -18,18 +18,18 @@ import Romi.Response (errorForbidden, errorSchema)
 requireAuthUser :: Guard' ModelUserSingle
 requireAuthUser req = case select req.headers "authorization" >>= parseToken of
   Just { name, password } -> do
-    user <- users.select (\{userName, userPassword, userAlive} -> userName == name && userPassword == password && userAlive)
+    user <- users.select (\user@{userName, userPassword} -> userName == name && userPassword == password && userIsAccesible user)
     case user of
       Just user' -> pure user'
-      Nothing -> response $ errorForbidden "Invalid credentials"
-  Nothing -> response $ errorForbidden "Authorization header not found or invalid format"
+      Nothing -> throwError $ errorForbidden "Invalid credentials"
+  Nothing -> throwError $ errorForbidden "Authorization header not found or invalid format"
 
 
 
 requireAuthAdmin :: Guard' ModelUserSingle
 requireAuthAdmin req = do
   user <- requireAuthUser req
-  if user.userAdmin then pure user else response $ errorForbidden "User is not an admin"
+  if userIsAdmin user then pure user else response $ errorForbidden "User is not an admin"
 
 selectLogginIn :: Guard' ReqLoginApi
 selectLogginIn req = except $ lmap errorSchema $ parseLoginInApi req.body

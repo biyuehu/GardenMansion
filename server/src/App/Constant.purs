@@ -12,11 +12,11 @@ defaultModelUsers :: ModelUsers
 defaultModelUsers = [
   { userId: 1
   , userName: "admin"
+  , userNickname: "Romisama"
   , userPassword: "123456"
   -- , userEmail: "admin@gmail.com"
   , userTime: 0.0
-  , userAlive: true
-  , userAdmin: true
+  , userLevel: 1
   }
 ]
 

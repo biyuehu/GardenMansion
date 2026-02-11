@@ -5,7 +5,7 @@ module App.Route
 
 -- import App.Components (logger)
 
-import App.Handler (changePasswordInfo, createExpense, createMessage, createUser, deleteExpense, deleteMessage, deleteUser, fetchAllExpenses, fetchAllMessages, fetchAllUsers, fetchInfo, fetchMeta, loginIn, updateMeta)
+import App.Handler (changePasswordInfo, createExpense, createMessage, createUser, deleteExpense, deleteMessage, deleteUser, fetchAllExpenses, fetchAllMessages, fetchAllUsers, fetchInfo, fetchMeta, loginIn, renameInfo, updateMeta)
 import App.Types (Env)
 import Romi.Core (Route(..), Routes)
 import Romi.Request (Method(..))
@@ -24,7 +24,7 @@ routers =
   , Route GET "/api/meta" fetchMeta
   , Route PUT "/api/meta" updateMeta
   , Route GET "/api/info" fetchInfo
-  -- , Route PUT "/api/info/rename" renameInfo
+  , Route PUT "/api/info/rename" renameInfo
   , Route PUT "/api/info/password" changePasswordInfo
   , Route POST "/api/login" loginIn
   ]

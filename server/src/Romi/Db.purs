@@ -6,27 +6,26 @@ module Romi.Db
   , DBOps
   , ListModel
   , class ProvideDB
-  , getDB
-  , makeModel
   , dbBatch
   , dbClose
   , dbCreate
   , dbDel
   , dbDelOrIf
   , dbGet
+  , dbOpsOf
   , dbPut
   , dbPutOr
   , dbPutOrIf
-  , dbOpsOf
+  , getDB
+  , makeModel
   )
   where
 
 import Prelude
 
-import Control.Monad.Error.Class (class MonadError)
 import Control.Monad.Reader (class MonadReader, ask)
 import Control.Promise (Promise, toAffE)
-import Data.Array (filter, find, length, snoc)
+import Data.Array (filter, find, foldl, snoc)
 import Data.Either (Either, fromRight)
 import Data.Maybe (Maybe(..))
 import Effect (Effect)
@@ -158,12 +157,14 @@ type ListModel m b =
   , insert :: b -> m Unit
   , insertMany :: Array b -> m Unit
   , deleteAll :: (b -> Boolean) -> m Unit
-  , count :: m Int
+  -- , count :: m Int
+  , rowId :: m Int
   }
 
 type ListModelApi keys dat =
   { key :: keys
   , parse :: String -> Either String (Array dat)
+  , rowId :: dat -> Int
   }
 
 makeModel :: forall keys dat env m.
@@ -173,7 +174,7 @@ makeModel :: forall keys dat env m.
   WriteForeign dat =>
   ProvideDB env =>
   ListModelApi keys dat -> ListModel m dat
-makeModel { key, parse } =
+makeModel { key, parse, rowId } =
   let
     decode :: String -> Array dat
     decode = fromRight [] <<< parse
@@ -215,9 +216,14 @@ makeModel { key, parse } =
       dbOpsOf.put key case datas of
             Just datas'' -> filter (not <<< cond) $ decode datas''
             Nothing -> []
-    , count: do
+    -- , count: do
+    --   datas <- dbOpsOf.get key
+    --   pure $ case datas of
+    --     Just datas' -> length $ decode datas'
+    --     Nothing -> 0
+    , rowId: do
       datas <- dbOpsOf.get key
-      pure $ case datas of
-        Just datas' -> length $ decode datas'
+      pure $ 1 + case datas of
+        Just datas' -> foldl (\acc item -> max acc $ rowId item) 0 $ decode datas'
         Nothing -> 0
   }

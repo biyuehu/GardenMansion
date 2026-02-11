@@ -1,7 +1,7 @@
 @URL = http://localhost:8080/api
 @USERNAME = admin
-@PASSWORD = 1234526
-@TOKEN = YWRtaW4=:|:MTIzNDUyNg==
+@PASSWORD = 123456
+@TOKEN = YWRtaW4=:|:MTIzNDU2
 # @TOKEN = bmV3VXNlcg==:|:MTIzNDU2
 
 ###
@@ -121,7 +121,7 @@ Authorization: {{TOKEN}}
 Body:
 
 {
-  "infoUsername": "admin"
+  "infoUsername": "Romisama"
 }
 
 ###
