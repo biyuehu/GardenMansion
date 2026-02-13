@@ -20,4 +20,4 @@ A web application for managing gardens and plants.
 
 ## License
 
-Under the `BAN-ZHINESE-USING` license.
+Under the `BCU` license.
