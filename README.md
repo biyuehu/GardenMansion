@@ -4,6 +4,7 @@ A web application for managing gardens and plants.
 
 ## Stacks
 
+- Bun (Fucking Node)
 - PureScript (Backend)
 - Node HTTP (FFI for PureScript)
 - Elm (Frontend)
@@ -11,6 +12,7 @@ A web application for managing gardens and plants.
 - LevelDB (Database)
 - Idris2 (Database package base on LevelDB)
 - Haskell (common type definitions of Frontend and Backend)
+- Dhall (application cnfiguration file)
 - TypeScript (Configuration and bootstrapping files)
 - JavaScript (PureScript FFI)
 - CSS (Stylesheets)
