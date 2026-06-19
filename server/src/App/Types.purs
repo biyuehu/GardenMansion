@@ -8,13 +8,16 @@ module App.Types
 import Prelude
 
 import Data.Maybe (Maybe)
+import Effect.Aff (Aff)
 import Models (ResUserSingle)
 import Romi.Core (Handler, Guard)
 import Romi.Db (class ProvideDB, DB)
+import Romi.Logger (Logger)
 
 newtype Env = Env
   { user :: Maybe ResUserSingle
   , db :: DB
+  , logger :: Logger Aff
   }
 
 instance ProvideDB Env where

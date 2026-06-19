@@ -7,7 +7,9 @@
   , "console"
   , "effect"
   , "either"
+  , "foldable-traversable"
   , "foreign"
+  , "js-date"
   , "lists"
   , "maybe"
   , "nonempty"
@@ -16,7 +18,6 @@
   , "strings"
   , "transformers"
   , "tuples"
-  , "js-date"
   ]
 , packages = ./packages.dhall
 , sources = [ "src/**/*.purs", "test/**/*.purs" ]
