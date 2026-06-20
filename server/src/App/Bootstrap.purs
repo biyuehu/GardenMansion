@@ -38,10 +38,9 @@ envInit = do
         , transports:
             [ ConsoleTransport
                 { useColor: true
-                , labelColor: "cyan"
-                , labelTemplate: "[{name}]"
+                , labelTemplate: "[<cyan>{name}</cyan>]"
                 , timeFormat: "YY/M/D H:m:s"
-                , template: "{time} {level} ({pid}) {labels}: {msg}"
+                , template: "<blue>{time}</blue> {level} (<bold>{pid}</bold>) {labels}: {msg}"
                 }
             ]
         }

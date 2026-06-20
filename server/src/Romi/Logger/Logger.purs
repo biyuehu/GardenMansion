@@ -20,6 +20,16 @@ data LoggerLevel
   | Trace
   | Silent
 
+instance Show LoggerLevel where
+  show Fatal = "FATAL"
+  show Error = "ERROR"
+  show Warn = "WARN"
+  show Info = "INFO"
+  show Record = "RECORD"
+  show Debug = "DEBUG"
+  show Trace = "TRACE"
+  show Silent = "SILENT"
+
 derive instance Eq LoggerLevel
 derive instance Ord LoggerLevel
 
