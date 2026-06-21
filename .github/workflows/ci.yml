@@ -39,11 +39,12 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y chezscheme
 
-      - name: Setup Idris2 (via pack)
+      - name: Install Idris 2 & Pack
         run: |
-          curl -sSL https://raw.githubusercontent.com/stefan-hoeck/idris2-pack/main/install.sh | bash
+          sudo apt-get update
+          sudo apt-get install -y chezscheme
+          echo "chezscheme" | bash -c "$(curl -fsSL https://raw.githubusercontent.com/stefan-hoeck/idris2-pack/main/install.bash)"
           echo "$HOME/.pack/bin" >> $GITHUB_PATH
-          pack install idris2
 
       - name: Install Python dependencies
         run: python -m pip install --upgrade pip

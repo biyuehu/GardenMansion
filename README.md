@@ -21,7 +21,7 @@ A web application for managing gardens and plants.
 - HTML (Templates)
 - Just (Task runner)
 - Python (Development scripts)
-- Codeberg (傻逼 GitHub)
+- Codeberg (傻逼 GitHub 既不开源更不自由)
 
 ## License
 
