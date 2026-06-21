@@ -10,3 +10,7 @@ body {
   min-height: 100vh;
   color: #2d3748;
 }
+
+button {
+  border: 0
+}

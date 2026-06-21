@@ -113,7 +113,7 @@ update msg model =
                         , timestamp = 1234567890
                         }
                 in
-                { model 
+                { model
                 | messages = newMessage :: model.messages
                 , newMessage = ""
                 }
@@ -184,9 +184,9 @@ view model =
 viewHeader : Html Msg
 viewHeader =
     header [ class "text-center text-white space-y-2" ]
-        [ h1 [ class "text-5xl font-bold drop-shadow-lg" ] 
+        [ h1 [ class "text-5xl font-bold drop-shadow-lg" ]
             [ text "🏠 合租管理系统" ]
-        , p [ class "text-lg opacity-90" ] 
+        , p [ class "text-lg opacity-90" ]
             [ text "千禧年代的数字化合租生活" ]
         ]
 
@@ -200,13 +200,13 @@ viewNavigation currentPage =
 
 viewNavTab : String -> Page -> Bool -> Html Msg
 viewNavTab label page isActive =
-    button 
-        [ class (if isActive then 
+    button
+        [ class (if isActive then
             "flex-1 px-6 py-3 rounded-lg font-medium transition-all bg-indigo-500 text-white shadow-lg shadow-indigo-500/30"
-          else 
+        else
             "flex-1 px-6 py-3 rounded-lg font-medium transition-all text-slate-600 hover:bg-slate-200")
         , onClick (ChangePage page)
-        ] 
+        ]
         [ text label ]
 
 viewCurrentPage : Model -> Html Msg
@@ -225,27 +225,27 @@ viewMessagesPage : Model -> Html Msg
 viewMessagesPage model =
     div [ class "space-y-8" ]
         [ div [ class "bg-slate-50 rounded-xl p-6 space-y-6" ]
-            [ h3 [ class "text-xl text-slate-800" ] 
+            [ h3 [ class "text-xl text-slate-800" ]
                 [ text "💬 最新留言" ]
-            , div [ class "space-y-4" ] 
+            , div [ class "space-y-4" ]
                 (List.map viewMessage model.messages)
             ]
         , Html.form [ onSubmit AddMessage, class "space-y-6" ]
             [ div [ class "space-y-3" ]
-                [ label [ class "block font-medium text-slate-700" ] 
+                [ label [ class "block font-medium text-slate-700" ]
                     [ text "发布新留言" ]
-                , textarea 
+                , textarea
                     [ class "w-full min-h-24 px-3 py-2 border-2 border-slate-200 rounded-lg text-base resize-y focus:outline-none focus:border-indigo-500 transition-colors"
                     , placeholder "分享你的想法或通知..."
                     , value model.newMessage
                     , onInput UpdateNewMessage
                     ] []
                 ]
-            , button 
+            , button
                 [ class "bg-indigo-500 text-white px-8 py-3 rounded-lg font-medium hover:bg-indigo-600 hover:translate-y--1 hover:shadow-lg hover:shadow-indigo-500/30 transition-all"
                 , type_ "button"
                 , onClick AddMessage
-                ] 
+                ]
                 [ text "发布留言" ]
             ]
         ]
@@ -254,27 +254,27 @@ viewMessage : Message -> Html Msg
 viewMessage message =
     div [ class "bg-white rounded-lg p-4 border-l-4 border-indigo-500 shadow-sm" ]
         [ div [ class "flex justify-between items-center mb-2" ]
-            [ span [ class "font-semibold text-indigo-500" ] 
+            [ span [ class "font-semibold text-indigo-500" ]
                 [ text message.author ]
-            , span [ class "text-sm text-slate-500" ] 
+            , span [ class "text-sm text-slate-500" ]
                 [ text "刚刚" ]
             ]
-        , p [ class "text-slate-600 leading-relaxed" ] 
+        , p [ class "text-slate-600 leading-relaxed" ]
             [ text message.content ]
         ]
 
 viewExpensesPage : Model -> Html Msg
 viewExpensesPage model =
     div [ class "space-y-8" ]
-        [ h3 [ class "text-xl text-slate-800" ] 
+        [ h3 [ class "text-xl text-slate-800" ]
             [ text "💰 本月费用统计" ]
-        , div [ class "space-y-3" ] 
+        , div [ class "space-y-3" ]
             (List.map viewExpense model.expenses)
         , Html.form [ onSubmit AddExpense, class "space-y-6 mt-8" ]
             [ div [ class "space-y-3" ]
-                [ label [ class "block font-medium text-slate-700" ] 
+                [ label [ class "block font-medium text-slate-700" ]
                     [ text "费用名称" ]
-                , input 
+                , input
                     [ type_ "text"
                     , class "w-full px-3 py-2 border-2 border-slate-200 rounded-lg text-base focus:outline-none focus:border-indigo-500 transition-colors"
                     , placeholder "如：电费、水费、生活用品等"
@@ -283,9 +283,9 @@ viewExpensesPage model =
                     ] []
                 ]
             , div [ class "space-y-3" ]
-                [ label [ class "block font-medium text-slate-700" ] 
+                [ label [ class "block font-medium text-slate-700" ]
                     [ text "金额" ]
-                , input 
+                , input
                     [ type_ "number"
                     , class "w-full px-3 py-2 border-2 border-slate-200 rounded-lg text-base focus:outline-none focus:border-indigo-500 transition-colors"
                     , placeholder "0.00"
@@ -295,9 +295,9 @@ viewExpensesPage model =
                     ] []
                 ]
             , div [ class "space-y-3" ]
-                [ label [ class "block font-medium text-slate-700" ] 
+                [ label [ class "block font-medium text-slate-700" ]
                     [ text "备注" ]
-                , input 
+                , input
                     [ type_ "text"
                     , class "w-full px-3 py-2 border-2 border-slate-200 rounded-lg text-base focus:outline-none focus:border-indigo-500 transition-colors"
                     , placeholder "可选的备注信息"
@@ -330,7 +330,7 @@ viewExpense expense =
 viewUsersPage : Model -> Html Msg
 viewUsersPage model =
     div [ class "space-y-6" ]
-        [ h3 [ class "text-xl text-slate-800" ] 
+        [ h3 [ class "text-xl text-slate-800" ]
             [ text "👥 室友列表" ]
         , div [ class "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4" ]
             (List.map viewUser model.users ++ [ viewAddUserCard ])
@@ -341,9 +341,9 @@ viewUser user =
     div [ class "bg-white rounded-xl p-6 text-center border-2 border-slate-200 hover:border-indigo-500 hover:translate-y--2 hover:shadow-lg transition-all" ]
         [ div [ class "w-15 h-15 rounded-full bg-indigo-500 mx-auto mb-4 flex items-center justify-center text-white text-2xl font-bold" ]
             [ text user.avatar ]
-        , div [ class "font-semibold mb-2" ] 
+        , div [ class "font-semibold mb-2" ]
             [ text user.name ]
-        , div [ class "text-sm text-green-500" ] 
+        , div [ class "text-sm text-green-500" ]
             [ text user.status ]
         ]
 
@@ -352,9 +352,9 @@ viewAddUserCard =
     div [ class "bg-slate-50 rounded-xl p-6 text-center border-2 border-dashed border-slate-300" ]
         [ div [ class "w-15 h-15 rounded-full bg-slate-300 mx-auto mb-4 flex items-center justify-center text-slate-500 text-2xl font-bold" ]
             [ text "+" ]
-        , div [ class "font-semibold text-slate-500 mb-2" ] 
+        , div [ class "font-semibold text-slate-500 mb-2" ]
             [ text "添加室友" ]
-        , div [ class "text-sm text-slate-500" ] 
+        , div [ class "text-sm text-slate-500" ]
             [ text "点击邀请" ]
         ]
 
