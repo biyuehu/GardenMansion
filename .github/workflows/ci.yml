@@ -34,6 +34,11 @@ jobs:
           purescript: "latest"
           spago: "latest"
 
+      - name: Install elm
+        run: |
+          bun add -g elm
+          elm --version
+
       - name: Install Idris2 & dependencies
         run: |
           sudo apt-get update
