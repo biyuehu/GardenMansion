@@ -55,7 +55,10 @@ jobs:
           cd client && bun install
 
       - name: Run just build
-        run: just build
+        run: |
+          just gen
+          just build
+          just test
 
       - name: Upload Frontend Build
         uses: actions/upload-artifact@v4
