@@ -52,6 +52,6 @@ test:
   cd {{server}}; spago test
 
 # Renerate types
-generate:
+gen:
   @echo "🤖 Generating types..."
   python scripts/generate.py
