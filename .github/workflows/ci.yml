@@ -34,12 +34,7 @@ jobs:
           purescript: "latest"
           spago: "latest"
 
-      - name: Install Idris2 dependencies
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y chezscheme
-
-      - name: Install Idris 2 & Pack
+      - name: Install Idris2 & dependencies
         run: |
           sudo apt-get update
           sudo apt-get install -y chezscheme
@@ -48,6 +43,11 @@ jobs:
 
       - name: Install Python dependencies
         run: python -m pip install --upgrade pip
+
+      - name: Install npm dependencies
+        run: |
+          bun install
+          cd client && bun install
 
       - name: Run just build
         run: just build

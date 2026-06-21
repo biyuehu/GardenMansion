@@ -26,7 +26,7 @@ build:
 # Build frontend
 build-f:
   @echo "🏗️  Building frontend..."
-  cd {{client}}; bun exec vite build
+  cd {{client}}; bun vite build
 
 # Build backend
 build-b:

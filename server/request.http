@@ -77,7 +77,7 @@ Body:
 {
   "userName": "newU2ser",
   "userPassword": "123456",
-  "userAlive": true
+  "userNickname": "true"
 }
 
 ###
