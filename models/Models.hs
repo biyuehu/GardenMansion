@@ -44,6 +44,10 @@ data ReqLoginApi = ReqLoginApi
     req_loginPassword :: String
   }
 
+data ResLoginApi = ResLoginApi
+  { token :: String
+  }
+
 data ReqInfoRenameApi = ReqInfoRenameApi
   { req_infoUsername :: String
   }
