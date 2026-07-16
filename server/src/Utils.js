@@ -13,20 +13,3 @@ export const decodeBase64Prim = (str) => (just) => (nothing) => {
     nothing
   }
 }
-
-export const onShutdownSignal = (cleanup) => () => {
-  let called = false
-  const handler = (signal) => () => {
-    if (called) return
-    called = true
-    try {
-      cleanup()
-    } catch (e) {
-      console.error('Failed to exit:', e)
-    } finally {
-      process.exit(0)
-    }
-  }
-  process.on('SIGTERM', handler('SIGTERM'))
-  process.on('SIGINT', handler('SIGINT'))
-}
