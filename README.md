@@ -25,4 +25,4 @@ A web application for managing gardens and plants.
 
 ## License
 
-Under the `BCU` license.
+Under the `GPL-3.0-or-later` license.
