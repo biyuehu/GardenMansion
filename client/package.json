@@ -1,4 +1,5 @@
 {
+	"name": "garden-mansion-client",
 	"type": "module",
 	"devDependencies": {
 		"elm-debug-transformer": "^1.2.1",

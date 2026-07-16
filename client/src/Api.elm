@@ -30,35 +30,29 @@ import Http
 import Json.Decode as Decode exposing (Decoder)
 import Json.Encode as Encode exposing (Value)
 import Models exposing (..)
+import Maybe exposing (withDefault)
 
 
 apiBase : String
 apiBase =
-    "http://localhost:8080/api"
-
+    "/api"
 
 authHeaders : String -> List Http.Header
 authHeaders token =
     [ Http.header "Authorization" token ]
 
+encodeMaybeInt : Maybe Int -> Encode.Value
+encodeMaybeInt maybeVal =
+    case maybeVal of
+        Just val -> Encode.int val
+        Nothing -> Encode.null
 
-encodeMaybeInt : Maybe Int -> Value
-encodeMaybeInt value =
-    case value of
-        Just n ->
-            Encode.int n
-
-        Nothing ->
-            Encode.null
-
-
-encodeReqMessageApi : ReqMessageApi -> Value
+encodeReqMessageApi : ReqMessageApi -> Encode.Value
 encodeReqMessageApi body =
     Encode.object
         [ ( "messageText", Encode.string body.messageText )
         , ( "messageReplyId", encodeMaybeInt body.messageReplyId )
         ]
-
 
 encodeReqExpenseApi : ReqExpenseApi -> Value
 encodeReqExpenseApi body =
@@ -67,7 +61,6 @@ encodeReqExpenseApi body =
         , ( "expenseComment", Encode.string body.expenseComment )
         ]
 
-
 encodeReqLoginApi : ReqLoginApi -> Value
 encodeReqLoginApi body =
     Encode.object
@@ -75,13 +68,11 @@ encodeReqLoginApi body =
         , ( "loginPassword", Encode.string body.loginPassword )
         ]
 
-
 encodeReqInfoRenameApi : ReqInfoRenameApi -> Value
 encodeReqInfoRenameApi body =
     Encode.object
         [ ( "infoUsername", Encode.string body.infoUsername )
         ]
-
 
 encodeReqInfoPasswordApi : ReqInfoPasswordApi -> Value
 encodeReqInfoPasswordApi body =
@@ -89,7 +80,6 @@ encodeReqInfoPasswordApi body =
         [ ( "infoPasswordOld", Encode.string body.infoPasswordOld )
         , ( "infoPasswordNew", Encode.string body.infoPasswordNew )
         ]
-
 
 encodeReqMetaApi : ReqMetaApi -> Value
 encodeReqMetaApi body =
@@ -101,7 +91,6 @@ encodeReqMetaApi body =
         , ( "webStartTime", Encode.float body.webStartTime )
         ]
 
-
 encodeReqUserApi : ReqUserApi -> Value
 encodeReqUserApi body =
     Encode.object
@@ -110,14 +99,12 @@ encodeReqUserApi body =
         , ( "userPassword", Encode.string body.userPassword )
         ]
 
-
 encodeReqUserDeleteApi : ReqUserDeleteApi -> Value
 encodeReqUserDeleteApi body =
     Encode.object
         [ ( "deleteUserId", Encode.int body.deleteUserId )
         , ( "deleteForced", Encode.bool body.deleteForced )
         ]
-
 
 encodeReqMessageDeleteApi : ReqMessageDeleteApi -> Value
 encodeReqMessageDeleteApi body =
@@ -142,14 +129,12 @@ resMessageSingleDecoder =
         (Decode.field "messageId" Decode.int)
         (Decode.field "messageText" Decode.string)
         (Decode.field "messageUserId" Decode.int)
-        (Decode.field "messageReplyId" (Decode.nullable Decode.int))
+        (Decode.maybe (Decode.field "messageReplyId" Decode.int))
         (Decode.field "messageReleaseTime" Decode.float)
-
 
 resMessageApiDecoder : Decoder ResMessageApi
 resMessageApiDecoder =
     Decode.list resMessageSingleDecoder
-
 
 resExpenseSingleDecoder : Decoder ResExpenseSingle
 resExpenseSingleDecoder =
@@ -160,11 +145,9 @@ resExpenseSingleDecoder =
         (Decode.field "expenseComment" Decode.string)
         (Decode.field "expenseTime" Decode.float)
 
-
 resExpenseApiDecoder : Decoder ResExpenseApi
 resExpenseApiDecoder =
     Decode.list resExpenseSingleDecoder
-
 
 resInfoApiDecoder : Decoder ResInfoApi
 resInfoApiDecoder =
@@ -175,7 +158,6 @@ resInfoApiDecoder =
         (Decode.field "infoTime" Decode.float)
         (Decode.field "infoLevel" Decode.int)
 
-
 resMetaApiDecoder : Decoder ResMetaApi
 resMetaApiDecoder =
     Decode.map5 ResMetaApi
@@ -185,7 +167,6 @@ resMetaApiDecoder =
         (Decode.field "webNotice" Decode.string)
         (Decode.field "webStartTime" Decode.float)
 
-
 resUserSingleDecoder : Decoder ResUserSingle
 resUserSingleDecoder =
     Decode.map5 ResUserSingle
@@ -194,7 +175,6 @@ resUserSingleDecoder =
         (Decode.field "userNickname" Decode.string)
         (Decode.field "userTime" Decode.float)
         (Decode.field "userLevel" Decode.int)
-
 
 resUserApiDecoder : Decoder ResUserApi
 resUserApiDecoder =
@@ -212,14 +192,20 @@ loginRequest body toMsg =
         , expect = Http.expectJson toMsg resLoginDecoder
         }
 
-
-getMessagesRequest : (Result Http.Error ResMessageApi -> msg) -> Cmd msg
-getMessagesRequest toMsg =
-    Http.get
-        { url = apiBase ++ "/messages"
-        , expect = Http.expectJson toMsg resMessageApiDecoder
+authorizedGet : String -> String -> Decoder a -> (Result Http.Error a -> msg) -> Cmd msg
+authorizedGet token url decoder toMsg =
+    Http.request
+        { method = "GET"
+        , headers = [ Http.header "Authorization" token ]
+        , url = url
+        , body = Http.emptyBody
+        , expect = Http.expectJson toMsg decoder
+        , timeout = Nothing
+        , tracker = Nothing
         }
 
+getMessagesRequest : String -> (Result Http.Error ResMessageApi -> msg) -> Cmd msg
+getMessagesRequest token toMsg = authorizedGet token (apiBase ++ "/messages") resMessageApiDecoder toMsg
 
 postMessageRequest : String -> ReqMessageApi -> (Result Http.Error () -> msg) -> Cmd msg
 postMessageRequest token body toMsg =
@@ -233,7 +219,6 @@ postMessageRequest token body toMsg =
         , tracker = Nothing
         }
 
-
 deleteMessageRequest : String -> ReqMessageDeleteApi -> (Result Http.Error () -> msg) -> Cmd msg
 deleteMessageRequest token body toMsg =
     Http.request
@@ -246,14 +231,8 @@ deleteMessageRequest token body toMsg =
         , tracker = Nothing
         }
 
-
-getExpensesRequest : (Result Http.Error ResExpenseApi -> msg) -> Cmd msg
-getExpensesRequest toMsg =
-    Http.get
-        { url = apiBase ++ "/expenses"
-        , expect = Http.expectJson toMsg resExpenseApiDecoder
-        }
-
+getExpensesRequest : String -> (Result Http.Error ResExpenseApi -> msg) -> Cmd msg
+getExpensesRequest token toMsg = authorizedGet token (apiBase ++ "/expenses") resExpenseApiDecoder toMsg
 
 postExpenseRequest : String -> ReqExpenseApi -> (Result Http.Error () -> msg) -> Cmd msg
 postExpenseRequest token body toMsg =
@@ -267,7 +246,6 @@ postExpenseRequest token body toMsg =
         , tracker = Nothing
         }
 
-
 deleteExpenseRequest : String -> ReqExpenseDeleteApi -> (Result Http.Error () -> msg) -> Cmd msg
 deleteExpenseRequest token body toMsg =
     Http.request
@@ -280,14 +258,8 @@ deleteExpenseRequest token body toMsg =
         , tracker = Nothing
         }
 
-
-getUsersRequest : (Result Http.Error ResUserApi -> msg) -> Cmd msg
-getUsersRequest toMsg =
-    Http.get
-        { url = apiBase ++ "/users"
-        , expect = Http.expectJson toMsg resUserApiDecoder
-        }
-
+getUsersRequest : String -> (Result Http.Error ResUserApi -> msg) -> Cmd msg
+getUsersRequest token toMsg = authorizedGet token (apiBase ++ "/users") resUserApiDecoder toMsg
 
 postUserRequest : String -> ReqUserApi -> (Result Http.Error () -> msg) -> Cmd msg
 postUserRequest token body toMsg =
@@ -301,7 +273,6 @@ postUserRequest token body toMsg =
         , tracker = Nothing
         }
 
-
 deleteUserRequest : String -> ReqUserDeleteApi -> (Result Http.Error () -> msg) -> Cmd msg
 deleteUserRequest token body toMsg =
     Http.request
@@ -314,13 +285,8 @@ deleteUserRequest token body toMsg =
         , tracker = Nothing
         }
 
-
-getMetaRequest : (Result Http.Error ResMetaApi -> msg) -> Cmd msg
-getMetaRequest toMsg =
-    Http.get
-        { url = apiBase ++ "/meta"
-        , expect = Http.expectJson toMsg resMetaApiDecoder
-        }
+getMetaRequest : Maybe String -> (Result Http.Error ResMetaApi -> msg) -> Cmd msg
+getMetaRequest token toMsg = authorizedGet (withDefault "" token) (apiBase ++ "/meta") resMetaApiDecoder toMsg
 
 
 putMetaRequest : String -> ReqMetaApi -> (Result Http.Error () -> msg) -> Cmd msg
@@ -335,7 +301,6 @@ putMetaRequest token body toMsg =
         , tracker = Nothing
         }
 
-
 getInfoRequest : String -> (Result Http.Error ResInfoApi -> msg) -> Cmd msg
 getInfoRequest token toMsg =
     Http.request
@@ -348,7 +313,6 @@ getInfoRequest token toMsg =
         , tracker = Nothing
         }
 
-
 putInfoRenameRequest : String -> ReqInfoRenameApi -> (Result Http.Error () -> msg) -> Cmd msg
 putInfoRenameRequest token body toMsg =
     Http.request
@@ -360,7 +324,6 @@ putInfoRenameRequest token body toMsg =
         , timeout = Nothing
         , tracker = Nothing
         }
-
 
 putInfoPasswordRequest : String -> ReqInfoPasswordApi -> (Result Http.Error () -> msg) -> Cmd msg
 putInfoPasswordRequest token body toMsg =
