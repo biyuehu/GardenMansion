@@ -1,4 +1,19 @@
-module App.Guard where
+module App.Guard
+  ( tryAuthUser
+  , requireAuthAdmin
+  , requireAuthUser
+  , selectChangeingPassword
+  , selectCreatingExpense
+  , selectCreatingMessage
+  , selectCreatingUser
+  , selectDeletingExpense
+  , selectDeletingMessage
+  , selectDeletingUser
+  , selectLogginIn
+  , selectRenaming
+  , selectUpdatingMeta
+  )
+  where
 
 import Prelude
 
@@ -14,6 +29,14 @@ import Romi.Core (response)
 import Romi.Request (select)
 import Romi.Response (errorForbidden, errorSchema)
 
+tryAuthUser :: Guard' (Maybe ModelUserSingle)
+tryAuthUser req = case select req.headers "authorization" >>= parseToken of
+  Just { name, password } -> do
+    user <- users.select (\user@{userName, userPassword} -> userName == name && userPassword == password && userIsAccesible user)
+    case user of
+      Just user' -> pure $ Just user'
+      Nothing -> pure Nothing
+  Nothing -> pure Nothing
 
 requireAuthUser :: Guard' ModelUserSingle
 requireAuthUser req = case select req.headers "authorization" >>= parseToken of
@@ -23,8 +46,6 @@ requireAuthUser req = case select req.headers "authorization" >>= parseToken of
       Just user' -> pure user'
       Nothing -> throwError $ errorForbidden "Invalid credentials"
   Nothing -> throwError $ errorForbidden "Authorization header not found or invalid format"
-
-
 
 requireAuthAdmin :: Guard' ModelUserSingle
 requireAuthAdmin req = do

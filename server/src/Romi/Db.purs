@@ -31,8 +31,7 @@ import Data.Maybe (Maybe(..))
 import Effect (Effect)
 import Effect.Aff (Aff)
 import Effect.Aff.Class (class MonadAff, liftAff)
-import Simple.JSON (class WriteForeign)
-import Utils (encodeSchema)
+import Simple.JSON (class WriteForeign, writeJSON)
 
 data DB
 
@@ -128,13 +127,13 @@ dbOpsOf =
       liftAff $ dbGet db $ show k
   , put: \k v -> do
       db <- ask >>= getDB
-      liftAff $ dbPut db (show k) $ encodeSchema v
+      liftAff $ dbPut db (show k) $ writeJSON v
   , putOr: \k v -> do
       db <- ask >>= getDB
-      liftAff $ dbPutOr db (show k) $ encodeSchema v
+      liftAff $ dbPutOr db (show k) $ writeJSON v
   , putOrIf: \k v cond -> do
       db <- ask >>= getDB
-      liftAff $ dbPutOrIf db (show k) (encodeSchema v) cond
+      liftAff $ dbPutOrIf db (show k) (writeJSON v) cond
   , del: \k -> do
       db <- ask >>= getDB
       liftAff $ dbDel db $ show k

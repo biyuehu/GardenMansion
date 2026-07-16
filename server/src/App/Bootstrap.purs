@@ -11,12 +11,13 @@ import Control.Monad.Except (runExceptT)
 import Control.Monad.Reader (runReaderT)
 import Data.Either (isLeft)
 import Data.Maybe (Maybe(..))
-import Effect.Aff (Aff, launchAff_)
+import Effect.Aff (Aff, launchAff_, runAff_)
 import Effect.Class (liftEffect)
-import Romi.Db (dbCreate)
+import Romi.Db (dbClose, dbCreate)
 import Romi.Logger (Logger, LoggerLevel(..), createLogger, info, record)
 import Romi.Logger.Transport.Console (ConsoleTransport(..))
 import Romi.Server (createServer, listen)
+import Utils (onShutdownSignal)
 
 envInit :: Aff Env
 envInit = do
@@ -29,6 +30,7 @@ envInit = do
     dbOps.putOrIf Meta defaultModelMeta $ isLeft <<< parseModelMeta
     pure unit
   )) env
+  liftEffect $ onShutdownSignal $ runAff_ (\_ -> pure unit) $ dbClose db
   pure env
   where
     logger :: Logger Aff
@@ -45,11 +47,10 @@ envInit = do
             ]
         }
 
-
 bootstrap :: Aff Unit
 bootstrap = do
   env <- envInit
   let Env ({ logger }) = env
   info logger $ "starting server..."
   server <- createServer routers env Nothing
-  liftEffect $ listen server defaultServerPort $ launchAff_ $ record logger $ "Server is running on http://localhost:" <> show defaultServerPort
+  liftEffect $ listen server defaultServerPort $ launchAff_ $ record logger $ "Server is running on <yellow>http://localhost:" <> show defaultServerPort <> "</yellow>"

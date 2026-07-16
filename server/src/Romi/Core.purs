@@ -8,7 +8,6 @@ module Romi.Core
   )
   where
 
-
 import Control.Monad.Error.Class (throwError, class MonadError)
 import Control.Monad.Except (ExceptT)
 import Control.Monad.Reader (class MonadReader, ReaderT)

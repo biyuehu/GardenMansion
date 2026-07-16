@@ -1,0 +1,25 @@
+package:
+  name: garden-mansion-server
+  dependencies:
+  - aff
+  - aff-promise
+  - arrays
+  - bifunctors
+  - console
+  - effect
+  - either
+  - foldable-traversable
+  - foreign
+  - js-date
+  - lists
+  - maybe
+  - nonempty
+  - prelude
+  - simple-json
+  - strings
+  - transformers
+  - tuples
+workspace:
+  extra_packages: {}
+  package_set:
+    url: https://raw.githubusercontent.com/purescript/package-sets/psc-0.15.15-20250916/packages.json

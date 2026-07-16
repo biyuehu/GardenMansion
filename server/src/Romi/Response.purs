@@ -9,6 +9,7 @@ module Romi.Response
   , errorNotFound
   , errorSchema
   , errorUnauthorized
+  , errorServerInternal
   , setResponse
   , toResponse
   , toResponseRaw
@@ -20,6 +21,7 @@ import Prelude
 import Data.Tuple (Tuple(..))
 import Effect (Effect)
 import Romi.Request (Headers)
+import Simple.JSON (writeJSON)
 
 data ResponsePrim
 
@@ -74,24 +76,24 @@ toResponseRaw (Raw res) = res
 type ErrorReponse = { code :: Int, error :: String }
 
 errorSchema :: String -> Response
-errorSchema err = JsonStatusRes BadRequest $ show ({"error": err, "code": toInt BadRequest} :: ErrorReponse)
+errorSchema err = JsonStatusRes BadRequest $ writeJSON ({"error": err, "code": toInt BadRequest} :: ErrorReponse)
 
 errorForbidden :: String -> Response
-errorForbidden err = JsonStatusRes Forbidden $ show {"error": err, "code": toInt Forbidden}
+errorForbidden err = JsonStatusRes Forbidden $ writeJSON {"error": err, "code": toInt Forbidden}
 
 errorBadRequest :: String -> Response
-errorBadRequest err = JsonStatusRes BadRequest $ show {"error": err, "code": toInt BadRequest}
+errorBadRequest err = JsonStatusRes BadRequest $ writeJSON {"error": err, "code": toInt BadRequest}
 
 errorUnauthorized :: String -> Response
-errorUnauthorized err = JsonStatusRes Unauthorized $ show {"error": err, "code": toInt Unauthorized}
+errorUnauthorized err = JsonStatusRes Unauthorized $ writeJSON {"error": err, "code": toInt Unauthorized}
 
 errorNotFound :: String -> Response
-errorNotFound err = JsonStatusRes NotFound $ show {"error": err, "code": toInt NotFound}
+errorNotFound err = JsonStatusRes NotFound $ writeJSON {"error": err, "code": toInt NotFound}
+
+errorServerInternal :: Response
+errorServerInternal = JsonStatusRes InternalServerError $ writeJSON {"error": "Internal Server Error", "code": toInt InternalServerError}
 
 derive instance Eq Response
-
-instance Show Response where
-  show res = show $ toResponseRaw res
 
 class Responseable a where
   toResponse :: a -> Response

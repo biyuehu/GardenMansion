@@ -3,8 +3,6 @@ module App.Route
   )
   where
 
--- import App.Components (logger)
-
 import App.Handler (changePasswordInfo, createExpense, createMessage, createUser, deleteExpense, deleteMessage, deleteUser, fetchAllExpenses, fetchAllMessages, fetchAllUsers, fetchInfo, fetchMeta, loginIn, renameInfo, updateMeta)
 import App.Types (Env)
 import Romi.Core (Route(..), Routes)

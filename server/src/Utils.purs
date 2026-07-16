@@ -3,10 +3,10 @@ module Utils
   , currentDir
   , decodeBase64
   , encodeBase64
-  , encodeSchema
   , endsWith
   , filterMap
   , log'
+  , onShutdownSignal
   , pathJoin
   , schema
   , startsWith
@@ -20,10 +20,13 @@ import Data.List (List(..), foldr)
 import Data.List.Types (NonEmptyList(..))
 import Data.Maybe (Maybe(..))
 import Data.NonEmpty (NonEmpty(..))
+import Effect (Effect)
 import Effect.Class (class MonadEffect, liftEffect)
 import Effect.Console (log)
 import Foreign (ForeignError(..))
-import Simple.JSON (class ReadForeign, class WriteForeign, readJSON, writeJSON)
+import Simple.JSON (class ReadForeign, readJSON)
+
+foreign import onShutdownSignal :: Effect Unit -> Effect Unit
 
 foreign import endsWith :: String -> String -> Boolean
 
@@ -50,10 +53,6 @@ schema str = case readJSON str of
     Left (NonEmptyList (NonEmpty err a)) -> Left $ showErrors $ Cons err a
     Right x -> Right x
 
-encodeSchema :: forall a. WriteForeign a => a -> String
-encodeSchema s = writeJSON s
-
-
 foreign import currentDir :: String
 
 foreign import pathJoin :: String -> String -> String
@@ -65,4 +64,7 @@ log' = liftEffect <<< log
 
 foreign import encodeBase64 :: String -> String
 
-foreign import decodeBase64 :: String -> String
+foreign import decodeBase64Prim :: String -> (String -> Maybe String) -> Maybe String -> Maybe String
+
+decodeBase64 :: String -> Maybe String
+decodeBase64 str = decodeBase64Prim str Just Nothing
