@@ -1,8 +1,14 @@
 {
+	"name": "garden-mansion",
+	"description": "Functional Co-living Management System",
+	"version": "1.0.0",
+	"author": "Arimura Romi <biyuehuya@gmail.com>",
+	"homepage": "https://i.arimuraromi.com",
 	"dependencies": {
 		"@kotori-bot/tools": "^1.5.2",
 		"dayjs": "^1.11.21",
-		"level": "^10.0.0"
+		"level": "^10.0.0",
+		"sirv": "^3.0.2"
 	},
 	"devDependencies": {
 		"@types/bun": "^1.3.14"

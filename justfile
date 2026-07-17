@@ -17,7 +17,7 @@ dev-f:
 # Start backend server
 dev-b:
   @echo "🚀 Starting backend server..."
-  cd {{server}}; bunx chokidar-cli "**/*.purs" "**/*.yaml" --initial -c "bunx spago run" --debounce 3000
+  cd {{server}}; bun ../scripts/watch-backend
 
 # Build
 build:

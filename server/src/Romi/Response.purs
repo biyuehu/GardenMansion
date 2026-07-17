@@ -1,5 +1,6 @@
 module Romi.Response
-  ( Response(..)
+  ( RequestPrim(..)
+  , Response(..)
   , ResponsePrim
   , ResponseRaw
   , Status(..)
@@ -8,8 +9,8 @@ module Romi.Response
   , errorForbidden
   , errorNotFound
   , errorSchema
-  , errorUnauthorized
   , errorServerInternal
+  , errorUnauthorized
   , setResponse
   , toResponse
   , toResponseRaw
@@ -22,6 +23,8 @@ import Data.Tuple (Tuple(..))
 import Effect (Effect)
 import Romi.Request (Headers)
 import Simple.JSON (writeJSON)
+
+data RequestPrim
 
 data ResponsePrim
 

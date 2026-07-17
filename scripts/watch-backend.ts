@@ -7,6 +7,7 @@ const PATTERNS = (process.env.WATCH_PATTERNS ?? '**/*.purs,**/*.yaml')
   .map((s) => s.trim())
   .filter(Boolean)
 const DEBOUNCE_MS = Number(process.env.WATCH_DEBOUNCE ?? 300)
+const IS_WINDOWS = process.platform === 'win32'
 
 let current: Subprocess | null = null
 let restarting = false
@@ -24,8 +25,7 @@ async function killCurrentAndWait(): Promise<void> {
   current = null
 
   log(`killing process tree, pid=${pid}`)
-  if (process.platform === 'win32') {
-    // Windows: kill entire process tree, not just the top process
+  if (IS_WINDOWS) {
     const killer = spawn(['taskkill', '/PID', String(pid), '/T', '/F'], {
       stdout: 'inherit',
       stderr: 'inherit'
@@ -38,12 +38,7 @@ async function killCurrentAndWait(): Promise<void> {
       process.kill(pid, 'SIGKILL')
     }
   }
-
-  await Promise.race([
-    proc.exited,
-    new Promise((resolve) => setTimeout(resolve, Number(process.env.WATCH_KILL_TIMEOUT ?? 8000)))
-  ])
-
+  await Promise.race([proc.exited, new Promise((resolve) => setTimeout(resolve, 8000))])
   log('process tree killed')
 }
 
@@ -98,9 +93,10 @@ watch(process.cwd(), { recursive: true }, (_event, filename) => {
         '$'
       return new RegExp(regexStr).test(normalized.replace(/\\/g, '/'))
     })
-  )
+  ) {
     log(`change detected (${normalized}), restart in ${DEBOUNCE_MS}ms`)
-  if (debounceTimer) clearTimeout(debounceTimer)
-  debounceTimer = setTimeout(() => restart(), DEBOUNCE_MS)
+    if (debounceTimer) clearTimeout(debounceTimer)
+    debounceTimer = setTimeout(() => restart(), DEBOUNCE_MS)
+  }
 })
 startNew()

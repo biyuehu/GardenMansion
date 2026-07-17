@@ -3,6 +3,7 @@ module Types exposing (Model, Page(..), Msg(..), initialModel)
 import Dict exposing (Dict)
 import Http
 import Models exposing (ResMessageSingle, ResExpenseSingle, ResUserSingle, ResInfoApi, ResMetaApi)
+import Time
 
 type alias Model =
   { currentPage : Page
@@ -29,9 +30,11 @@ type alias Model =
   , metaNameInput : String
   , metaTitleInput : String
   , metaNoticeInput : String
+  , metaStartTimeInput : String
   , errorMsg : Maybe String
   , statusMsg : Maybe String
   , userDict : Dict Int String
+  , currentTime : Time.Posix
   }
 
 type Page
@@ -87,6 +90,8 @@ type Msg
   | DeleteUser Int Bool
   | GotUserDeleteResult (Result Http.Error ())
   | DismissError
+  | GotCurrentTime Time.Posix
+  | UpdateMetaStartTime String
 
 initialModel : Model
 initialModel =
@@ -114,7 +119,9 @@ initialModel =
   , metaNameInput = ""
   , metaTitleInput = ""
   , metaNoticeInput = ""
+  , metaStartTimeInput = ""
   , errorMsg = Nothing
   , statusMsg = Nothing
   , userDict = Dict.empty
+  , currentTime = Time.millisToPosix 0
   }

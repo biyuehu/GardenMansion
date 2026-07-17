@@ -1,5 +1,6 @@
 {
 	"name": "garden-mansion-client",
+	"description": "Functional Co-living Management System",
 	"type": "module",
 	"devDependencies": {
 		"elm-debug-transformer": "^1.2.1",

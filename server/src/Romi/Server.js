@@ -1,4 +1,5 @@
 import { createServer } from 'node:http'
+import sirv from 'sirv'
 
 export const createServerPrim = (callback) => (tuple) => (parseMethod) => () =>
   createServer((req, res) => {
@@ -15,7 +16,7 @@ export const createServerPrim = (callback) => (tuple) => (parseMethod) => () =>
           path: pathname,
           headers: Object.entries(req.headers).map(([k, v]) => tuple(k)(v ? (Array.isArray(v) ? v.join(',') : v) : '')),
           method: parseMethod(req.method ?? 'GET')
-        })(res)()
+        })(req)(res)()
       } catch (error) {
         console.error('PureScript Error:', error)
         res.statusCode = 500
@@ -23,6 +24,14 @@ export const createServerPrim = (callback) => (tuple) => (parseMethod) => () =>
       }
     })
   })
+
+export const createStaticHandler = (assetsDir) => (req) => (res) => () => {
+  try {
+    sirv(assetsDir)(req, res)
+  } catch (error) {
+    console.error('Error serving static assets:', error)
+  }
+}
 
 export const listen = (server) => (port) => (callback) => () => server.listen(port, () => callback())
 export const close = (server) => () => server.close()

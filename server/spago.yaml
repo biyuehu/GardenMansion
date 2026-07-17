@@ -1,24 +1,25 @@
 package:
   name: garden-mansion-server
+  description: Functional Co-living Management System
   dependencies:
-  - aff
-  - aff-promise
-  - arrays
-  - bifunctors
-  - console
-  - effect
-  - either
-  - foldable-traversable
-  - foreign
-  - js-date
-  - lists
-  - maybe
-  - nonempty
-  - prelude
-  - simple-json
-  - strings
-  - transformers
-  - tuples
+    - aff
+    - aff-promise
+    - arrays
+    - bifunctors
+    - console
+    - effect
+    - either
+    - foldable-traversable
+    - foreign
+    - js-date
+    - lists
+    - maybe
+    - nonempty
+    - prelude
+    - simple-json
+    - strings
+    - transformers
+    - tuples
 workspace:
   extra_packages: {}
   package_set:

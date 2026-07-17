@@ -2,6 +2,7 @@ module App.Types
   ( Env(..)
   , Guard'
   , Handler'
+  , ApplicationConfig
   )
   where
 
@@ -26,3 +27,13 @@ instance ProvideDB Env where
 type Handler' = Handler Env
 
 type Guard' a = Guard Env a
+
+type ApplicationConfig =
+  { port :: Int
+  , defaultName :: String
+  , defaultTitle :: String
+  , defaultNotice :: String
+  , defaultStartTime :: Number
+  , staticDir :: String
+  , dataDir :: String
+  }

@@ -11,6 +11,8 @@ import Types exposing (Model, Msg(..), Page(..), initialModel)
 import Api
 import Ports
 import Utils exposing (errorToString, formatTime, getUserName)
+import Time
+import Task
 
 init : Maybe String -> ( Model, Cmd Msg )
 init flagsToken =
@@ -31,9 +33,13 @@ init flagsToken =
             , Api.getMessagesRequest token GotMessages
             , Api.getInfoRequest token GotInfo
             , Api.getUsersRequest token GotUsers
+            , Task.perform GotCurrentTime Time.now
             ]
         Nothing ->
-          Api.getMetaRequest model.token GotMeta
+          Cmd.batch
+            [ Api.getMetaRequest model.token GotMeta
+            , Task.perform GotCurrentTime Time.now
+            ]
   in
   ( model, cmds )
 
@@ -67,6 +73,7 @@ update msg model =
             , Api.getInfoRequest res.token GotInfo
             , Api.getUsersRequest res.token GotUsers
             , Ports.saveToken (Just res.token)
+            , Task.perform GotCurrentTime Time.now
             ]
           )
         Err err -> ( { model | loginError = Just (errorToString err) }, Cmd.none )
@@ -77,7 +84,16 @@ update msg model =
     GotMeta result ->
       case result of
         Ok meta ->
-          ( { model | meta = Just meta, metaUrlInput = meta.webUrl, metaNameInput = meta.webName, metaTitleInput = meta.webTitle, metaNoticeInput = meta.webNotice }, Cmd.none )
+          ( { model
+            | meta = Just meta
+            , metaUrlInput = meta.webUrl
+            , metaNameInput = meta.webName
+            , metaTitleInput = meta.webTitle
+            , metaNoticeInput = meta.webNotice
+            , metaStartTimeInput = String.fromFloat meta.webStartTime
+            }
+          , Cmd.none
+          )
         Err err -> ( { model | errorMsg = Just (errorToString err) }, Cmd.none )
     UpdateMetaUrl v -> ( { model | metaUrlInput = v }, Cmd.none )
     UpdateMetaName v -> ( { model | metaNameInput = v }, Cmd.none )
@@ -86,10 +102,18 @@ update msg model =
     SubmitMeta ->
       case model.token of
         Just token ->
+          let
+            startTime =
+              String.toFloat model.metaStartTimeInput
+              |> Maybe.withDefault 0
+          in
           ( model
           , Api.putMetaRequest token
-            { webUrl = model.metaUrlInput, webName = model.metaNameInput, webTitle = model.metaTitleInput, webNotice = model.metaNoticeInput
-            , webStartTime = Maybe.map .webStartTime model.meta |> Maybe.withDefault 0
+            { webUrl = model.metaUrlInput
+            , webName = model.metaNameInput
+            , webTitle = model.metaTitleInput
+            , webNotice = model.metaNoticeInput
+            , webStartTime = startTime
             }
             GotMetaUpdateResult
           )
@@ -221,20 +245,24 @@ update msg model =
         Ok _ -> ( model, Api.getUsersRequest (Maybe.withDefault "" model.token) GotUsers )
         Err err -> ( { model | errorMsg = Just (errorToString err) }, Cmd.none )
     DismissError -> ( { model | errorMsg = Nothing, statusMsg = Nothing }, Cmd.none )
+    GotCurrentTime time -> ( { model | currentTime = time }, Cmd.none )
+    UpdateMetaStartTime v -> ( { model | metaStartTimeInput = v }, Cmd.none )
 
 viewHeader : Model -> Html Msg
 viewHeader model =
   header [ class "text-center space-y-3" ]
-    [ h1 [ class "text-4xl font-bold drop-shadow-lg text-slate-800" ] [ text ("🏠 " ++ (Maybe.map .webTitle model.meta |> Maybe.withDefault "Garden Mansion")) ]
+    [ h1 [ class "text-4xl font-bold drop-shadow-lg text-slate-800" ] [ text ("🏠 " ++ (Maybe.map .webTitle model.meta |> Maybe.withDefault "花园公馆")) ]
     , case model.info of
       Just info ->
         div []
           [ p [ class "text-xl text-slate-700" ] [ text (Maybe.map .webNotice model.meta |> Maybe.withDefault "千禧年代的数字化合租生活") ]
           , div [ class "text-base flex justify-center gap-6 items-center text-slate-700 mt-2" ]
-            [ span [ class "text-xl font-medium" ] [ text ("欢迎回来，" ++ info.infoNickname) ]
-            , button [ class "bg-white/30 hover:bg-white/50 text-slate-700 px-3.5 py-1 rounded-lg backdrop-blur-sm transition-all cursor-pointer text-lg font-medium", onClick Logout ] [ text "登出" ]
-            ]
+            [ span [ class "text-xl font-medium" ] [ text ("欢迎回来，" ++ info.infoNickname) ] ]
           ]
+      Nothing -> text ""
+    , case model.token of
+      Just _ ->
+        button [ class "bg-white/30 hover:bg-white/50 text-slate-700 px-3.5 py-1 rounded-lg backdrop-blur-sm transition-all cursor-pointer text-lg font-medium", onClick Logout ] [ text "登出" ]
       Nothing -> text ""
     ]
 
@@ -300,7 +328,7 @@ viewMessagesPage model =
     [ div [ class "bg-white/60 rounded-xl p-6 space-y-6" ]
       [ h3 [ class "text-xl text-slate-800" ] [ text "💬 最新留言" ]
       , if List.isEmpty model.messages then p [ class "text-slate-500 text-center py-4" ] [ text "暂无留言，来发表第一条吧" ]
-        else div [ class "max-h-145 h-50vh overflow-y-auto space-y-4" ] (List.map (viewMessage model) model.messages)
+        else div [ class "max-h-125 h-50vh overflow-y-auto space-y-4" ] (List.map (viewMessage model) model.messages)
       ]
     , div [ class "space-y-3" ]
       [ label [ class "block font-medium text-slate-700" ]
@@ -344,7 +372,7 @@ viewExpensesPage model =
       , div [ class "font-bold text-lg text-slate-700" ] [ text ("总计: ¥" ++ String.fromFloat total) ]
       ]
     , if List.isEmpty model.expenses then p [ class "text-slate-500 text-center py-4" ] [ text "暂无费用记录" ]
-      else div [ class "max-h-145 h-50vh overflow-y-auto space-y-3" ] (List.map (viewExpense model) model.expenses)
+      else div [ class "max-h-125 h-50vh overflow-y-auto space-y-3" ] (List.map (viewExpense model) model.expenses)
     , div [ class "space-y-6 mt-8 bg-white/60 p-6 rounded-xl" ]
       [ div [ class "space-y-3" ]
         [ label [ class "block font-medium text-slate-700" ] [ text "金额" ]
@@ -439,7 +467,10 @@ viewMetaPage : Model -> Html Msg
 viewMetaPage model =
   div [ class "max-w-md mx-auto space-y-6" ]
     [ h3 [ class "text-xl text-slate-800" ] [ text "⚙️ 站点设置" ]
-    , p [ class "text-sm text-slate-500" ] [ text "注意：修改站点信息需要管理员权限" ]
+    , div [ class "space-y-3" ]
+      [ label [ class "block font-medium text-slate-700" ] [ text "开始时间" ]
+      , input [ type_ "number", class "w-full px-3 py-2 border-solid border-2 border-[#9BCEC1] rounded-lg focus:outline-none focus:border-[#67A2C5] focus:ring-2 focus:ring-[#67A2C5] focus:ring-opacity-50 focus:shadow-lg transition-all", placeholder "时间戳", value model.metaStartTimeInput, onInput UpdateMetaStartTime ] []
+      ]
     , div [ class "space-y-3" ]
       [ label [ class "block font-medium text-slate-700" ] [ text "站点 URL" ]
       , input [ type_ "text", class "w-full px-3 py-2 border-solid border-2 border-[#9BCEC1] rounded-lg focus:outline-none focus:border-[#67A2C5] focus:ring-2 focus:ring-[#67A2C5] focus:ring-opacity-50 focus:shadow-lg transition-all", value model.metaUrlInput, onInput UpdateMetaUrl ] []
@@ -461,6 +492,21 @@ viewMetaPage model =
 
 view : Model -> Html Msg
 view model =
+  let
+    days =
+      case model.meta of
+        Just meta ->
+          let
+            start = meta.webStartTime
+            now = Time.posixToMillis model.currentTime
+          in
+          if start > 0 then
+            floor ((toFloat now - start) / 86400000)
+          else
+            -1
+        Nothing ->
+          -1
+  in
   div [ class "min-h-screen p-8 bg-gradient-to-br from-[#FFB6A6] to-[#FFEBD3]" ]
     [ div [ class "max-w-6xl mx-auto space-y-8" ]
       [ viewHeader model
@@ -469,7 +515,12 @@ view model =
         (case model.token of
           Nothing -> [ viewLoginForm model ]
           Just _ ->
-            [ viewNavigation model
+            [ if days >= 0 then
+                div [ class "text-center text-sm text-slate-600 bg-white/30 py-1 rounded mb-2" ]
+                  [ text ("🏡 已成立 " ++ String.fromInt days ++ " 天") ]
+              else
+                text ""
+            , viewNavigation model
             , case model.currentPage of
                 LoginPage -> viewLoginForm model
                 MessagesPage -> viewMessagesPage model
@@ -479,6 +530,8 @@ view model =
                 MetaPage -> viewMetaPage model
             ]
         )
+      , footer [ class "text-center text-md text-pink/80 pt-4 border-t border-white/20 mt-8 select-none" ]
+        [a [href "https://github.com/biyuehu/gardenmansion", class "text-pink/80 hover:text-pink/90 no-underline" ] [text "🏡 Garden Mansion"] , text " · Functional Co-living Management System · GPL-3· By Arimura Sena" ]
       ]
     ]
 
