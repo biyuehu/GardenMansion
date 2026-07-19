@@ -1,9 +1,10 @@
 {-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE DuplicateRecordFields #-}
+{-# LANGUAGE ImportQualifiedPost #-}
 {-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE OverloadedStrings #-}
 
-module Main (main) where
+module Main where
 
 import Control.Monad (forM_, unless, when)
 import Control.Monad.IO.Class (MonadIO, liftIO)
@@ -44,7 +45,7 @@ import System.Environment (getArgs)
 import System.Exit (exitFailure)
 import Text.Read (readMaybe)
 
--- | 四个固定的顶层 key，对应 DB 里存的四个数据表
+-- -- | 四个固定的顶层 key，对应 DB 里存的四个数据表
 data DBKey = Users | Expenses | Messages | Meta
   deriving (Eq, Enum, Bounded)
 

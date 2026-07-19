@@ -73,7 +73,6 @@ executable garden-mansion-cli
   -- Other library packages from which modules are imported.
   build-depends:
     base ^>=4.19.1.0
-    , leveldb-haskell >=0.6 && <0.7
     , bytestring
     , text
     , aeson
@@ -83,6 +82,8 @@ executable garden-mansion-cli
     , mtl
     , ansi-terminal
     , vector
+    , transformers
+    , directory
 
   -- Directories containing source files.
   hs-source-dirs:   app

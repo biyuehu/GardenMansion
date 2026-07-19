@@ -114,6 +114,7 @@ primBatch : DB -> PrimBatchOps -> AsyncIO ()
 
 public export
 batch : DB -> List BatchOp -> AsyncIO ()
+batch _ [] = pure ()
 batch db ops = primBatch db $ build ops
   where
     trans : BatchOp -> PrimBatchOp

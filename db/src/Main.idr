@@ -10,6 +10,7 @@ main = do
   exportCommonJs "get" getExternal
   exportCommonJs "put" put
   exportCommonJs "putOr" putOr
+  exportCommonJs "putIf" putIf
   exportCommonJs "putOrIf" putOrIf
   exportCommonJs "del" del
   exportCommonJs "delOrIf" delOrIf

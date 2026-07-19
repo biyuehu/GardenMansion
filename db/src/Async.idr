@@ -37,7 +37,7 @@ bindAsyncIO : AsyncIO a -> (a -> AsyncIO b) -> AsyncIO b
 
 public export
 %foreign """
-javascript:lambda:(_, f) => () => f().catch("Idris AsyncIO error:", console.error)
+javascript:lambda:(_, f) => () => f().catch((err) => console.error("Idris AsyncIO error:", err))
 """
 runAsyncIO : AsyncIO a -> IO ()
 
