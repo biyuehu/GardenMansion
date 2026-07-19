@@ -36,7 +36,7 @@ jobs:
 
       - name: Install elm
         run: |
-          bun add -g elm
+          bun add -g elm@0.19.1
           elm --version
 
       - name: Install Idris2 & dependencies
