@@ -22,5 +22,6 @@ client/src/Models.elm
 server/src/Models.purs
 server/db
 server/static
+server/server.js
 
 dist-newstyle

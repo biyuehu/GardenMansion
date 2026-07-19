@@ -64,15 +64,15 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: frontend-dist
-          path: client/dist
+          path: client/dist/
           retention-days: 30
           if-no-files-found: warn
 
       - name: Upload Backend Build
         uses: actions/upload-artifact@v4
         with:
-          name: backend-output
-          path: server/output
+          name: backend-bundle
+          path: server/server.js
           retention-days: 30
           if-no-files-found: warn
 
@@ -84,13 +84,13 @@ jobs:
           retention-days: 30
           if-no-files-found: warn
 
-      - name: Upload All Artifacts (Combined)
+      - name: Upload Unified Artifacts (Combined)
         uses: actions/upload-artifact@v4
         with:
-          name: full-build-artifacts
+          name: garden-mansion
           path: |
-            client/dist/
-            server/output/
-            db/
+            server/server.js
+            server/static/
+            server/sena.dhall
           retention-days: 30
           if-no-files-found: warn

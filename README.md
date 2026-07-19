@@ -39,6 +39,12 @@
 | Python | Development scripts |
 | Codeberg | 傻逼 GitHub 既不开源更不自由 |
 
+## Usage
+
+Download the `garden-mansion` artifact from the [GitHub Action](https://github.com/biyuehu/GardenMansion/actions/workflows/ci.yml) and extract it to a directory of your choice.
+
+Run `bun serve` or `node serve` and open your browser to `http://localhost:8080`.
+
 ## Development
 
 ```bash

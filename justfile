@@ -21,7 +21,7 @@ dev-b:
 
 # Build
 build:
-  just build-f; just build-d; just build-b
+  just build-f; just build-d; just build-b; cd server; bun build bin --minify --target node --outfile=server.js; cp ../client/dist static -r
 
 # Build frontend
 build-f:
